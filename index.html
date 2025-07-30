@@ -1,119 +1,91 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Talk to Sophie</title>
+  <title>Talk to Sophie - Cold Lava</title>
   <style>
     body {
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(160deg, #0a0908 0%, #111111 100%);
-      color: #00f7ef;
+      background: linear-gradient(to bottom, #0a0908, #000);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: white;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
-      text-align: center;
+      overflow: hidden;
     }
-
-    img.logo {
-      width: 80px;
-      margin-bottom: 10px;
+    #logo {
+      width: 120px;
+      margin-bottom: 20px;
     }
-
-    .sophie-pic {
-      width: 160px;
-      height: 220px;
-      object-fit: cover;
-      border: 4px solid white;
-      border-radius: 100px;
-      margin: 20px 0;
-    }
-
-    .pulse-dots {
-      display: flex;
-      justify-content: center;
-      margin: 10px 0;
-    }
-
-    .pulse-dots span {
-      display: block;
-      width: 6px;
-      height: 6px;
-      margin: 0 3px;
-      background-color: #00f7ef;
+    #profile-pic {
       border-radius: 50%;
-      animation: blink 1.4s infinite both;
+      border: 4px solid white;
+      width: 180px;
+      height: 180px;
+      object-fit: cover;
+      box-shadow: 0 0 30px rgba(0,255,255,0.15);
     }
-
-    .pulse-dots span:nth-child(2) { animation-delay: 0.2s; }
-    .pulse-dots span:nth-child(3) { animation-delay: 0.4s; }
-    .pulse-dots span:nth-child(4) { animation-delay: 0.6s; }
-    .pulse-dots span:nth-child(5) { animation-delay: 0.8s; }
-
-    @keyframes blink {
-      0%, 100% { opacity: 0.2; }
-      50% { opacity: 1; }
-    }
-
-    .talk-button {
-      background: #00f7ef;
+    #callButton {
+      margin-top: 30px;
+      background-color: #00f7e0;
       border: none;
-      color: black;
-      font-weight: bold;
-      padding: 14px 30px;
       border-radius: 999px;
-      font-size: 1rem;
+      padding: 14px 36px;
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #000;
       cursor: pointer;
-      transition: background 0.3s;
-      box-shadow: 0 0 10px #00f7ef88;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 20px #00f7e0a0;
     }
-
-    .talk-button:hover {
-      background: #02e6dd;
-    }
-
-    .status-text {
-      margin-top: 15px;
-      font-size: 0.9rem;
-      font-style: italic;
-      color: #00f7ef;
+    #callButton:hover {
+      background-color: #0ff;
+      box-shadow: 0 0 30px #00f7e0;
     }
   </style>
 </head>
 <body>
-  <img class="logo" src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/New_Project_3.png?v=1753174700" alt="Cold Lava Logo"/>
-  <img class="sophie-pic" src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/f63e1b45-8157-4920-ab3f-2833797fb6b9.png?v=1753867612" alt="Sophie" />
-
-  <div class="pulse-dots">
-    <span></span><span></span><span></span><span></span><span></span>
-  </div>
-
-  <button class="talk-button" onclick="vapiInstance.start()">Talk to Sophie</button>
-  <div class="status-text">Call ended. Ready to talk again.</div>
+  <img id="logo" src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/New_Project_3.png?v=1753174700" alt="Cold Lava Logo" />
+  <img id="profile-pic" src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/f63e1b45-8157-4920-ab3f-2833797fb6b9.png?v=1753867612" alt="Sophie" />
+  <button id="callButton">Talk to Sophie</button>
 
   <script>
     var vapiInstance = null;
     const assistant = "eeb05e21-693b-46ca-ab85-478b402c43ba";
     const apiKey = "9bf2cd14-2fd3-4f5c-9fd8-34a8ad7437a9";
-    const buttonConfig = { position: "hidden" };
 
-    (function(d, t) {
-      var g = document.createElement(t), s = d.getElementsByTagName(t)[0];
+    (function (d, t) {
+      var g = d.createElement(t),
+        s = d.getElementsByTagName(t)[0];
       g.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
       g.defer = true;
       g.async = true;
       s.parentNode.insertBefore(g, s);
+
       g.onload = function () {
         vapiInstance = window.vapiSDK.run({
           apiKey: apiKey,
           assistant: assistant,
-          config: buttonConfig,
+          config: {
+            startCallImmediately: false,
+            showFeedbackForm: false,
+            showBranding: false,
+            enableAnalytics: false,
+          },
         });
       };
     })(document, "script");
+
+    document.getElementById("callButton").addEventListener("click", () => {
+      if (vapiInstance) {
+        vapiInstance.start();
+      }
+    });
   </script>
 </body>
 </html>
