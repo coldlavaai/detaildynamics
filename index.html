@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sophie by Cold Lava</title>
-  <script src="https://unpkg.com/@vapi-ai/client-sdk-react/dist/embed/widget.umd.js" async type="text/javascript"></script>
+  <script src="https://unpkg.com/@vapi-ai/client-sdk-web"></script>
   <style>
     body {
       margin: 0;
@@ -34,45 +34,35 @@
     }
 
     .waveform {
-      position: relative;
-      width: 180px;
-      height: 40px;
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       justify-content: center;
+      gap: 4px;
       margin-bottom: 2rem;
+      height: 40px;
     }
 
-    .waveform span {
-      display: block;
-      width: 5px;
-      height: 100%;
+    .waveform .bar {
+      width: 6px;
+      height: 10px;
       background: #00ffcc;
-      margin: 0 2px;
-      border-radius: 2px;
-      animation: wave 1.2s infinite ease-in-out;
+      border-radius: 3px;
+      transition: height 0.1s ease;
     }
 
-    .waveform span:nth-child(1) { animation-delay: 0s; }
-    .waveform span:nth-child(2) { animation-delay: 0.1s; }
-    .waveform span:nth-child(3) { animation-delay: 0.2s; }
-    .waveform span:nth-child(4) { animation-delay: 0.3s; }
-    .waveform span:nth-child(5) { animation-delay: 0.4s; }
-    .waveform span:nth-child(6) { animation-delay: 0.5s; }
-    .waveform span:nth-child(7) { animation-delay: 0.6s; }
-
-    @keyframes wave {
-      0%, 100% {
-        height: 10%;
-      }
-      50% {
-        height: 100%;
-      }
+    .talk-btn {
+      background-color: #00e6e6;
+      color: #0a0908;
+      padding: 15px 30px;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
     }
 
-    vapi-widget {
-      position: relative;
-      z-index: 10;
+    .talk-btn:hover {
+      transform: scale(1.05);
     }
   </style>
 </head>
@@ -81,14 +71,41 @@
   <img src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/f63e1b45-8157-4920-ab3f-2833797fb6b9.png?v=1753867612" alt="Sophie" class="profile"/>
 
   <div class="waveform">
-    <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
   </div>
 
-  <vapi-widget
-    public-key="9bf2cd14-2fd3-4f5c-9fd8-34a8ad7437a9"
-    assistant-id="eeb05e21-693b-46ca-ab85-478b402c43ba"
-    mode="voice"
-    theme="light"
-  ></vapi-widget>
+  <button class="talk-btn" id="talkToSophie">🎤 Talk to Sophie</button>
+
+  <script>
+    const bars = document.querySelectorAll('.bar');
+
+    const vapi = new Vapi({
+      apiKey: "9bf2cd14-2fd3-4f5c-9fd8-34a8ad7437a9",
+    });
+
+    document.getElementById('talkToSophie').addEventListener('click', () => {
+      vapi.start();
+    });
+
+    vapi.on('mediaStream', ({ stream }) => {
+      const audioCtx = new AudioContext();
+      const source = audioCtx.createMediaStreamSource(stream);
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 64;
+      source.connect(analyser);
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      function animate() {
+        analyser.getByteFrequencyData(dataArray);
+        bars.forEach((bar, i) => {
+          const height = dataArray[i] / 2;
+          bar.style.height = `${height}px`;
+        });
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+    });
+  </script>
 </body>
 </html>
