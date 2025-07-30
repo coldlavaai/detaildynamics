@@ -50,7 +50,7 @@
       transition: height 0.1s ease;
     }
 
-    .talk-btn {
+    .talk-btn, .start-btn {
       background-color: #00e6e6;
       color: #0a0908;
       padding: 15px 30px;
@@ -59,10 +59,28 @@
       border-radius: 30px;
       cursor: pointer;
       transition: transform 0.2s ease;
+      margin: 10px 0;
     }
 
-    .talk-btn:hover {
+    .talk-btn:hover, .start-btn:hover {
       transform: scale(1.05);
+    }
+
+    #startSophie {
+      display: none;
+    }
+
+    vapi-widget::part(container) {
+      bottom: auto !important;
+      right: auto !important;
+      top: 60%;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    vapi-widget {
+      z-index: 999;
+      position: absolute;
     }
   </style>
 </head>
@@ -76,59 +94,63 @@
   </div>
 
   <button class="talk-btn" id="talkToSophie">🎤 Talk to Sophie</button>
+  <button class="start-btn" id="startSophie">✅ Start</button>
 
-  <!-- Hidden widget mount -->
-  <div id="vapi-widget-root" style="display: none;">
-    <vapi-widget
-      public-key="9bf2cd14-2fd3-4f5c-9fd8-34a8ad7437a9"
-      assistant-id="eeb05e21-693b-46ca-ab85-478b402c43ba"
-      mode="voice"
-      theme="light"
-    ></vapi-widget>
-  </div>
+  <!-- Embedded Vapi widget, manually controlled -->
+  <vapi-widget
+    id="sophieWidget"
+    public-key="9bf2cd14-2fd3-4f5c-9fd8-34a8ad7437a9"
+    assistant-id="eeb05e21-693b-46ca-ab85-478b402c43ba"
+    mode="voice"
+    theme="light"
+    style="display: none;"
+  ></vapi-widget>
 
   <script>
     const bars = document.querySelectorAll('.bar');
+    const startButton = document.getElementById('startSophie');
     const talkButton = document.getElementById('talkToSophie');
-    const widgetRoot = document.getElementById('vapi-widget-root');
+    const widget = document.getElementById('sophieWidget');
 
     talkButton.addEventListener('click', () => {
-      widgetRoot.style.display = "block";
-      document.querySelector("vapi-widget").shadowRoot.querySelector("button").click();
+      startButton.style.display = "inline-block";
     });
 
-    // Mic-driven animation on audio stream
-    window.addEventListener('DOMContentLoaded', () => {
-      const observer = new MutationObserver(() => {
-        const widget = document.querySelector("vapi-widget");
-        if (!widget) return;
+    startButton.addEventListener('click', () => {
+      widget.style.display = "block";
+      setTimeout(() => {
+        const shadowBtn = widget.shadowRoot?.querySelector("button");
+        if (shadowBtn) shadowBtn.click();
+      }, 500);
+    });
 
-        widget.addEventListener('mediaStream', ({ detail }) => {
-          const stream = detail.stream;
-          const audioCtx = new AudioContext();
-          const source = audioCtx.createMediaStreamSource(stream);
-          const analyser = audioCtx.createAnalyser();
-          analyser.fftSize = 64;
-          source.connect(analyser);
-          const dataArray = new Uint8Array(analyser.frequencyBinCount);
+    const observer = new MutationObserver(() => {
+      if (!widget || !widget.shadowRoot) return;
+      widget.addEventListener('mediaStream', ({ detail }) => {
+        const stream = detail.stream;
+        const audioCtx = new AudioContext();
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 64;
+        source.connect(analyser);
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-          function animate() {
-            analyser.getByteFrequencyData(dataArray);
-            bars.forEach((bar, i) => {
-              const height = dataArray[i] / 2;
-              bar.style.height = `${height}px`;
-            });
-            requestAnimationFrame(animate);
-          }
+        function animate() {
+          analyser.getByteFrequencyData(dataArray);
+          bars.forEach((bar, i) => {
+            const height = dataArray[i] / 2;
+            bar.style.height = `${height}px`;
+          });
+          requestAnimationFrame(animate);
+        }
 
-          animate();
-        });
-
-        observer.disconnect(); // only run once
+        animate();
       });
 
-      observer.observe(document.body, { childList: true, subtree: true });
+      observer.disconnect();
     });
+
+    observer.observe(document.body, { childList: true, subtree: true });
   </script>
 </body>
 </html>
