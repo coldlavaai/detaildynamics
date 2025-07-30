@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sophie by Cold Lava</title>
-  <script src="https://unpkg.com/@vapi-ai/client-sdk-web"></script>
+  <script src="https://unpkg.com/@vapi-ai/client-sdk-react/dist/embed/widget.umd.js" async type="text/javascript"></script>
   <style>
     body {
       margin: 0;
@@ -71,40 +71,63 @@
   <img src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/f63e1b45-8157-4920-ab3f-2833797fb6b9.png?v=1753867612" alt="Sophie" class="profile"/>
 
   <div class="waveform">
-    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
   </div>
 
   <button class="talk-btn" id="talkToSophie">🎤 Talk to Sophie</button>
 
+  <!-- Hidden widget mount -->
+  <div id="vapi-widget-root" style="display: none;">
+    <vapi-widget
+      public-key="9bf2cd14-2fd3-4f5c-9fd8-34a8ad7437a9"
+      assistant-id="eeb05e21-693b-46ca-ab85-478b402c43ba"
+      mode="voice"
+      theme="light"
+    ></vapi-widget>
+  </div>
+
   <script>
     const bars = document.querySelectorAll('.bar');
+    const talkButton = document.getElementById('talkToSophie');
+    const widgetRoot = document.getElementById('vapi-widget-root');
 
-    const vapi = new Vapi({
-      apiKey: "9bf2cd14-2fd3-4f5c-9fd8-34a8ad7437a9",
+    talkButton.addEventListener('click', () => {
+      widgetRoot.style.display = "block";
+      document.querySelector("vapi-widget").shadowRoot.querySelector("button").click();
     });
 
-    document.getElementById('talkToSophie').addEventListener('click', () => {
-      vapi.start();
-    });
+    // Mic-driven animation on audio stream
+    window.addEventListener('DOMContentLoaded', () => {
+      const observer = new MutationObserver(() => {
+        const widget = document.querySelector("vapi-widget");
+        if (!widget) return;
 
-    vapi.on('mediaStream', ({ stream }) => {
-      const audioCtx = new AudioContext();
-      const source = audioCtx.createMediaStreamSource(stream);
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 64;
-      source.connect(analyser);
-      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        widget.addEventListener('mediaStream', ({ detail }) => {
+          const stream = detail.stream;
+          const audioCtx = new AudioContext();
+          const source = audioCtx.createMediaStreamSource(stream);
+          const analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 64;
+          source.connect(analyser);
+          const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-      function animate() {
-        analyser.getByteFrequencyData(dataArray);
-        bars.forEach((bar, i) => {
-          const height = dataArray[i] / 2;
-          bar.style.height = `${height}px`;
+          function animate() {
+            analyser.getByteFrequencyData(dataArray);
+            bars.forEach((bar, i) => {
+              const height = dataArray[i] / 2;
+              bar.style.height = `${height}px`;
+            });
+            requestAnimationFrame(animate);
+          }
+
+          animate();
         });
-        requestAnimationFrame(animate);
-      }
 
-      animate();
+        observer.disconnect(); // only run once
+      });
+
+      observer.observe(document.body, { childList: true, subtree: true });
     });
   </script>
 </body>
