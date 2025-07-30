@@ -1,187 +1,119 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sophie by Cold Lava</title>
-  <script src="https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js" defer async></script>
+  <title>Talk to Sophie</title>
   <style>
     body {
       margin: 0;
-      padding: 0;
-      height: 100vh;
-      background: linear-gradient(135deg, #0a0908, #1e1e1e);
-      color: white;
-      font-family: 'Helvetica Neue', sans-serif;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(160deg, #0a0908 0%, #111111 100%);
+      color: #00f7ef;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
+      height: 100vh;
+      text-align: center;
     }
 
-    .logo {
-      width: 150px;
-      margin-bottom: 1rem;
+    img.logo {
+      width: 80px;
+      margin-bottom: 10px;
     }
 
-    .profile {
+    .sophie-pic {
       width: 160px;
-      border-radius: 100%;
-      border: 3px solid white;
-      margin-bottom: 1.5rem;
+      height: 220px;
+      object-fit: cover;
+      border: 4px solid white;
+      border-radius: 100px;
+      margin: 20px 0;
     }
 
-    .waveform {
+    .pulse-dots {
       display: flex;
-      align-items: flex-end;
       justify-content: center;
-      gap: 4px;
-      height: 40px;
-      margin-bottom: 2rem;
+      margin: 10px 0;
     }
 
-    .waveform .bar {
+    .pulse-dots span {
+      display: block;
       width: 6px;
-      height: 10px;
-      background: #00e6e6;
-      border-radius: 3px;
-      transition: height 0.1s ease;
+      height: 6px;
+      margin: 0 3px;
+      background-color: #00f7ef;
+      border-radius: 50%;
+      animation: blink 1.4s infinite both;
     }
 
-    .pill-button {
-      background-color: #00e6e6;
-      color: #0a0908;
-      padding: 15px 40px;
-      font-size: 1.2rem;
+    .pulse-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .pulse-dots span:nth-child(3) { animation-delay: 0.4s; }
+    .pulse-dots span:nth-child(4) { animation-delay: 0.6s; }
+    .pulse-dots span:nth-child(5) { animation-delay: 0.8s; }
+
+    @keyframes blink {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 1; }
+    }
+
+    .talk-button {
+      background: #00f7ef;
       border: none;
-      border-radius: 50px;
+      color: black;
+      font-weight: bold;
+      padding: 14px 30px;
+      border-radius: 999px;
+      font-size: 1rem;
       cursor: pointer;
-      transition: transform 0.2s ease;
-      animation: pulse 2s infinite;
+      transition: background 0.3s;
+      box-shadow: 0 0 10px #00f7ef88;
     }
 
-    .pill-button:hover {
-      transform: scale(1.05);
+    .talk-button:hover {
+      background: #02e6dd;
     }
 
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(0, 230, 230, 0.4); }
-      70% { box-shadow: 0 0 0 15px rgba(0, 230, 230, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(0, 230, 230, 0); }
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    .end-btn {
-      margin-top: 1rem;
-      background-color: transparent;
-      border: 2px solid #00e6e6;
-      color: #00e6e6;
-      padding: 10px 25px;
-      font-size: 0.9rem;
-      border-radius: 25px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .end-btn:hover {
-      background-color: #00e6e6;
-      color: #0a0908;
-    }
-
-    .status {
+    .status-text {
       margin-top: 15px;
-      font-size: 0.85rem;
-      color: #00e6e6;
+      font-size: 0.9rem;
       font-style: italic;
+      color: #00f7ef;
     }
   </style>
 </head>
 <body>
   <img class="logo" src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/New_Project_3.png?v=1753174700" alt="Cold Lava Logo"/>
-  <img class="profile" src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/f63e1b45-8157-4920-ab3f-2833797fb6b9.png?v=1753867612" alt="Sophie"/>
+  <img class="sophie-pic" src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/f63e1b45-8157-4920-ab3f-2833797fb6b9.png?v=1753867612" alt="Sophie" />
 
-  <div class="waveform" id="waveform">
-    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
-    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+  <div class="pulse-dots">
+    <span></span><span></span><span></span><span></span><span></span>
   </div>
 
-  <button class="pill-button" id="talkToSophie">Talk to Sophie</button>
-  <button class="end-btn hidden" id="endCall">End Call</button>
-  <div class="status" id="status">Ready to talk.</div>
+  <button class="talk-button" onclick="vapiInstance.start()">Talk to Sophie</button>
+  <div class="status-text">Call ended. Ready to talk again.</div>
 
   <script>
-    let vapiInstance = null;
+    var vapiInstance = null;
     const assistant = "eeb05e21-693b-46ca-ab85-478b402c43ba";
     const apiKey = "9bf2cd14-2fd3-4f5c-9fd8-34a8ad7437a9";
-    const buttonConfig = {
-      position: "center",
-      showStartButton: false,
-    };
+    const buttonConfig = { position: "hidden" };
 
-    const bars = document.querySelectorAll('.bar');
-    const talkBtn = document.getElementById('talkToSophie');
-    const endBtn = document.getElementById('endCall');
-    const status = document.getElementById('status');
-
-    function animateWaveform(stream) {
-      const audioCtx = new AudioContext();
-      const source = audioCtx.createMediaStreamSource(stream);
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 64;
-      source.connect(analyser);
-      const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-      function draw() {
-        analyser.getByteFrequencyData(dataArray);
-        bars.forEach((bar, i) => {
-          const height = dataArray[i] / 2;
-          bar.style.height = `${height}px`;
-        });
-        requestAnimationFrame(draw);
-      }
-      draw();
-    }
-
-    // Load the script
-    window.addEventListener("DOMContentLoaded", () => {
-      const script = document.createElement("script");
-      script.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
-      script.defer = true;
-      script.async = true;
-      document.body.appendChild(script);
-
-      script.onload = () => {
+    (function(d, t) {
+      var g = document.createElement(t), s = d.getElementsByTagName(t)[0];
+      g.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
+      g.defer = true;
+      g.async = true;
+      s.parentNode.insertBefore(g, s);
+      g.onload = function () {
         vapiInstance = window.vapiSDK.run({
-          apiKey,
-          assistant,
+          apiKey: apiKey,
+          assistant: assistant,
           config: buttonConfig,
         });
-
-        talkBtn.addEventListener("click", () => {
-          vapiInstance.trigger();
-        });
-
-        vapiInstance.on("call-start", ({ stream }) => {
-          status.textContent = "Sophie is listening...";
-          endBtn.classList.remove("hidden");
-          animateWaveform(stream);
-        });
-
-        vapiInstance.on("call-end", () => {
-          status.textContent = "Call ended. Ready to talk again.";
-          endBtn.classList.add("hidden");
-        });
-
-        endBtn.addEventListener("click", () => {
-          vapiInstance.hang();
-        });
       };
-    });
+    })(document, "script");
   </script>
 </body>
 </html>
