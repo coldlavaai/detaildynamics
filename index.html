@@ -2,10 +2,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sophie by Cold Lava</title>
-  <script src="https://unpkg.com/@vapi-ai/client-sdk-react/dist/embed/widget.umd.js" async type="text/javascript"></script>
+  <script src="https://unpkg.com/@vapi-ai/web"></script>
   <style>
     body {
       margin: 0;
@@ -18,7 +18,6 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
     }
 
     .logo {
@@ -30,84 +29,59 @@
       width: 160px;
       border-radius: 100%;
       border: 3px solid white;
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
     }
 
-    .waveform {
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      gap: 4px;
-      margin-bottom: 2rem;
-      height: 40px;
+    .talk-btn {
+      background-color: #00e6e6;
+      color: #0a0908;
+      padding: 15px 30px;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
     }
 
-    .waveform .bar {
-      width: 6px;
-      height: 10px;
-      background: #00ffcc;
-      border-radius: 3px;
-      transition: height 0.1s ease;
+    .talk-btn:hover {
+      transform: scale(1.05);
     }
 
-    vapi-widget {
-      position: relative;
-      margin-top: 10px;
-      z-index: 10;
-      --vapi-font-family: 'Helvetica Neue', sans-serif;
-      --vapi-button-background: #00e6e6;
-      --vapi-button-color: #0a0908;
+    .status {
+      margin-top: 20px;
+      font-size: 0.9rem;
+      color: #00e6e6;
     }
   </style>
 </head>
 <body>
-  <img src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/New_Project_3.png?v=1753174700" alt="Cold Lava Logo" class="logo"/>
-  <img src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/f63e1b45-8157-4920-ab3f-2833797fb6b9.png?v=1753867612" alt="Sophie" class="profile"/>
-
-  <div class="waveform">
-    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
-    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-  </div>
-
-  <!-- Native Vapi widget button placed centrally -->
-  <vapi-widget
-    public-key="9bf2cd14-2fd3-4f5c-9fd8-34a8ad7437a9"
-    assistant-id="eeb05e21-693b-46ca-ab85-478b402c43ba"
-    mode="voice"
-    theme="light"
-    initial-message="Talk to Sophie"
-  ></vapi-widget>
+  <img class="logo" src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/New_Project_3.png?v=1753174700" alt="Cold Lava Logo"/>
+  <img class="profile" src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/f63e1b45-8157-4920-ab3f-2833797fb6b9.png?v=1753867612" alt="Sophie"/>
+  <button class="talk-btn" id="startCall">🎤 Talk to Sophie</button>
+  <div class="status" id="status">Ready to talk</div>
 
   <script>
-    const bars = document.querySelectorAll('.bar');
-    const widget = document.querySelector("vapi-widget");
+    const button = document.getElementById('startCall');
+    const status = document.getElementById('status');
 
-    const observer = new MutationObserver(() => {
-      widget.addEventListener('mediaStream', ({ detail }) => {
-        const stream = detail.stream;
-        const audioCtx = new AudioContext();
-        const source = audioCtx.createMediaStreamSource(stream);
-        const analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 64;
-        source.connect(analyser);
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-        function animate() {
-          analyser.getByteFrequencyData(dataArray);
-          bars.forEach((bar, i) => {
-            const height = dataArray[i] / 2;
-            bar.style.height = `${height}px`;
-          });
-          requestAnimationFrame(animate);
-        }
-
-        animate();
-      });
-
-      observer.disconnect();
+    const vapi = new window.Vapi({
+      apiKey: "9bf2cd14-2fd3-4f5c-9fd8-34a8ad7437a9"
     });
 
-    observer.observe(document.body, { childList: true, subtree: true });
+    button.addEventListener('click', () => {
+      status.textContent = "Connecting to Sophie...";
+      vapi.start({
+        assistant: "eeb05e21-693b-46ca-ab85-478b402c43ba"
+      });
+    });
+
+    vapi.on('call-start', () => {
+      status.textContent = "Sophie is listening...";
+    });
+
+    vapi.on('call-end', () => {
+      status.textContent = "Call ended. Ready to talk again.";
+    });
   </script>
 </body>
 </html>
