@@ -2,10 +2,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sophie by Cold Lava</title>
-  <script src="https://unpkg.com/@vapi-ai/web"></script>
   <style>
     body {
       margin: 0;
@@ -57,31 +56,47 @@
 <body>
   <img class="logo" src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/New_Project_3.png?v=1753174700" alt="Cold Lava Logo"/>
   <img class="profile" src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/f63e1b45-8157-4920-ab3f-2833797fb6b9.png?v=1753867612" alt="Sophie"/>
-  <button class="talk-btn" id="startCall">🎤 Talk to Sophie</button>
+  <button class="talk-btn" id="talkToSophie">🎤 Talk to Sophie</button>
   <div class="status" id="status">Ready to talk</div>
 
   <script>
-    const button = document.getElementById('startCall');
-    const status = document.getElementById('status');
+    var vapiInstance = null;
+    const assistant = "eeb05e21-693b-46ca-ab85-478b402c43ba";
+    const apiKey = "9bf2cd14-2fd3-4f5c-9fd8-34a8ad7437a9";
+    const buttonConfig = {
+      position: "center",
+      showStartButton: false,
+    };
 
-    const vapi = new window.Vapi({
-      apiKey: "9bf2cd14-2fd3-4f5c-9fd8-34a8ad7437a9"
-    });
+    (function(d, t) {
+      var g = document.createElement(t),
+          s = d.getElementsByTagName(t)[0];
+      g.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
+      g.defer = true;
+      g.async = true;
+      s.parentNode.insertBefore(g, s);
 
-    button.addEventListener('click', () => {
-      status.textContent = "Connecting to Sophie...";
-      vapi.start({
-        assistant: "eeb05e21-693b-46ca-ab85-478b402c43ba"
-      });
-    });
+      g.onload = function () {
+        vapiInstance = window.vapiSDK.run({
+          apiKey: apiKey,
+          assistant: assistant,
+          config: buttonConfig,
+        });
 
-    vapi.on('call-start', () => {
-      status.textContent = "Sophie is listening...";
-    });
+        document.getElementById("talkToSophie").addEventListener("click", () => {
+          document.getElementById("status").textContent = "Connecting to Sophie...";
+          vapiInstance.trigger(); // Launches the assistant
+        });
 
-    vapi.on('call-end', () => {
-      status.textContent = "Call ended. Ready to talk again.";
-    });
+        vapiInstance.on("call-start", () => {
+          document.getElementById("status").textContent = "Sophie is listening...";
+        });
+
+        vapiInstance.on("call-end", () => {
+          document.getElementById("status").textContent = "Call ended. Ready to talk again.";
+        });
+      };
+    })(document, "script");
   </script>
 </body>
 </html>
