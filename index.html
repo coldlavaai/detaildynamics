@@ -50,37 +50,13 @@
       transition: height 0.1s ease;
     }
 
-    .talk-btn, .start-btn {
-      background-color: #00e6e6;
-      color: #0a0908;
-      padding: 15px 30px;
-      font-size: 1.2rem;
-      border: none;
-      border-radius: 30px;
-      cursor: pointer;
-      transition: transform 0.2s ease;
-      margin: 10px 0;
-    }
-
-    .talk-btn:hover, .start-btn:hover {
-      transform: scale(1.05);
-    }
-
-    #startSophie {
-      display: none;
-    }
-
-    vapi-widget::part(container) {
-      bottom: auto !important;
-      right: auto !important;
-      top: 60%;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-
     vapi-widget {
-      z-index: 999;
-      position: absolute;
+      position: relative;
+      margin-top: 10px;
+      z-index: 10;
+      --vapi-font-family: 'Helvetica Neue', sans-serif;
+      --vapi-button-background: #00e6e6;
+      --vapi-button-color: #0a0908;
     }
   </style>
 </head>
@@ -93,39 +69,20 @@
     <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
   </div>
 
-  <button class="talk-btn" id="talkToSophie">🎤 Talk to Sophie</button>
-  <button class="start-btn" id="startSophie">✅ Start</button>
-
-  <!-- Embedded Vapi widget, manually controlled -->
+  <!-- Native Vapi widget button placed centrally -->
   <vapi-widget
-    id="sophieWidget"
     public-key="9bf2cd14-2fd3-4f5c-9fd8-34a8ad7437a9"
     assistant-id="eeb05e21-693b-46ca-ab85-478b402c43ba"
     mode="voice"
     theme="light"
-    style="display: none;"
+    initial-message="Talk to Sophie"
   ></vapi-widget>
 
   <script>
     const bars = document.querySelectorAll('.bar');
-    const startButton = document.getElementById('startSophie');
-    const talkButton = document.getElementById('talkToSophie');
-    const widget = document.getElementById('sophieWidget');
-
-    talkButton.addEventListener('click', () => {
-      startButton.style.display = "inline-block";
-    });
-
-    startButton.addEventListener('click', () => {
-      widget.style.display = "block";
-      setTimeout(() => {
-        const shadowBtn = widget.shadowRoot?.querySelector("button");
-        if (shadowBtn) shadowBtn.click();
-      }, 500);
-    });
+    const widget = document.querySelector("vapi-widget");
 
     const observer = new MutationObserver(() => {
-      if (!widget || !widget.shadowRoot) return;
       widget.addEventListener('mediaStream', ({ detail }) => {
         const stream = detail.stream;
         const audioCtx = new AudioContext();
