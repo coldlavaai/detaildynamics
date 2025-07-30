@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sophie by Cold Lava</title>
+  <script src="https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js" defer async></script>
   <style>
     body {
       margin: 0;
@@ -17,6 +18,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
     }
 
     .logo {
@@ -31,36 +33,89 @@
       margin-bottom: 1.5rem;
     }
 
-    .talk-btn {
-      background-color: #00e6e6;
-      color: #0a0908;
-      padding: 15px 30px;
-      font-size: 1.2rem;
-      border: none;
-      border-radius: 30px;
-      cursor: pointer;
-      transition: transform 0.2s ease;
+    .waveform {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 4px;
+      height: 40px;
+      margin-bottom: 2rem;
     }
 
-    .talk-btn:hover {
+    .waveform .bar {
+      width: 6px;
+      height: 10px;
+      background: #00e6e6;
+      border-radius: 3px;
+      transition: height 0.1s ease;
+    }
+
+    .pill-button {
+      background-color: #00e6e6;
+      color: #0a0908;
+      padding: 15px 40px;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      animation: pulse 2s infinite;
+    }
+
+    .pill-button:hover {
       transform: scale(1.05);
     }
 
-    .status {
-      margin-top: 20px;
-      font-size: 0.9rem;
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(0, 230, 230, 0.4); }
+      70% { box-shadow: 0 0 0 15px rgba(0, 230, 230, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(0, 230, 230, 0); }
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .end-btn {
+      margin-top: 1rem;
+      background-color: transparent;
+      border: 2px solid #00e6e6;
       color: #00e6e6;
+      padding: 10px 25px;
+      font-size: 0.9rem;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .end-btn:hover {
+      background-color: #00e6e6;
+      color: #0a0908;
+    }
+
+    .status {
+      margin-top: 15px;
+      font-size: 0.85rem;
+      color: #00e6e6;
+      font-style: italic;
     }
   </style>
 </head>
 <body>
   <img class="logo" src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/New_Project_3.png?v=1753174700" alt="Cold Lava Logo"/>
   <img class="profile" src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/f63e1b45-8157-4920-ab3f-2833797fb6b9.png?v=1753867612" alt="Sophie"/>
-  <button class="talk-btn" id="talkToSophie">🎤 Talk to Sophie</button>
-  <div class="status" id="status">Ready to talk</div>
+
+  <div class="waveform" id="waveform">
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+  </div>
+
+  <button class="pill-button" id="talkToSophie">Talk to Sophie</button>
+  <button class="end-btn hidden" id="endCall">End Call</button>
+  <div class="status" id="status">Ready to talk.</div>
 
   <script>
-    var vapiInstance = null;
+    let vapiInstance = null;
     const assistant = "eeb05e21-693b-46ca-ab85-478b402c43ba";
     const apiKey = "9bf2cd14-2fd3-4f5c-9fd8-34a8ad7437a9";
     const buttonConfig = {
@@ -68,35 +123,65 @@
       showStartButton: false,
     };
 
-    (function(d, t) {
-      var g = document.createElement(t),
-          s = d.getElementsByTagName(t)[0];
-      g.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
-      g.defer = true;
-      g.async = true;
-      s.parentNode.insertBefore(g, s);
+    const bars = document.querySelectorAll('.bar');
+    const talkBtn = document.getElementById('talkToSophie');
+    const endBtn = document.getElementById('endCall');
+    const status = document.getElementById('status');
 
-      g.onload = function () {
+    function animateWaveform(stream) {
+      const audioCtx = new AudioContext();
+      const source = audioCtx.createMediaStreamSource(stream);
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 64;
+      source.connect(analyser);
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      function draw() {
+        analyser.getByteFrequencyData(dataArray);
+        bars.forEach((bar, i) => {
+          const height = dataArray[i] / 2;
+          bar.style.height = `${height}px`;
+        });
+        requestAnimationFrame(draw);
+      }
+      draw();
+    }
+
+    // Load the script
+    window.addEventListener("DOMContentLoaded", () => {
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
+      script.defer = true;
+      script.async = true;
+      document.body.appendChild(script);
+
+      script.onload = () => {
         vapiInstance = window.vapiSDK.run({
-          apiKey: apiKey,
-          assistant: assistant,
+          apiKey,
+          assistant,
           config: buttonConfig,
         });
 
-        document.getElementById("talkToSophie").addEventListener("click", () => {
-          document.getElementById("status").textContent = "Connecting to Sophie...";
-          vapiInstance.trigger(); // Launches the assistant
+        talkBtn.addEventListener("click", () => {
+          vapiInstance.trigger();
         });
 
-        vapiInstance.on("call-start", () => {
-          document.getElementById("status").textContent = "Sophie is listening...";
+        vapiInstance.on("call-start", ({ stream }) => {
+          status.textContent = "Sophie is listening...";
+          endBtn.classList.remove("hidden");
+          animateWaveform(stream);
         });
 
         vapiInstance.on("call-end", () => {
-          document.getElementById("status").textContent = "Call ended. Ready to talk again.";
+          status.textContent = "Call ended. Ready to talk again.";
+          endBtn.classList.add("hidden");
+        });
+
+        endBtn.addEventListener("click", () => {
+          vapiInstance.hang();
         });
       };
-    })(document, "script");
+    });
   </script>
 </body>
 </html>
