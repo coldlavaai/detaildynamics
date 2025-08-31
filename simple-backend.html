@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Retell Backend Proxy</title>
+    <script>
+        // Simple client-side proxy for demo purposes
+        // Note: In production, you should use a proper backend for security
+        async function handleRetellRequest(requestData) {
+            const RETELL_API_KEY = 'key_f636ae490564b5eeb88a55223ed9';
+            const RETELL_AGENT_ID = 'agent_6b974ba4769d7b7b8df27d05d0';
+            
+            try {
+                const response = await fetch('https://api.retellai.com/create-web-call', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${RETELL_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        agent_id: RETELL_AGENT_ID,
+                        metadata: requestData
+                    })
+                });
+                
+                return await response.json();
+            } catch (error) {
+                console.error('Retell API error:', error);
+                throw error;
+            }
+        }
+        
+        // Expose function globally
+        window.handleRetellRequest = handleRetellRequest;
+    </script>
+</head>
+<body>
+    <h1>Retell Backend Proxy</h1>
+    <p>This page provides a client-side proxy for Retell API calls.</p>
+</body>
+</html>
