@@ -1,4 +1,4 @@
- <!DOCTYPE html>                                                                                                                                               
+<!DOCTYPE html>                                                                                                                                               
      <html lang="en">
      <head>
        <meta charset="UTF-8" />
@@ -472,7 +472,10 @@
        </div>
 
        <!-- Include Retell JS SDK -->
-       <script src="https://cdn.jsdelivr.net/npm/retell-client-js-sdk@2.0.7/dist/retell-client-js-sdk.min.js"></script>
+       <script type="module">
+         import { RetellWebClient } from 'https://cdn.jsdelivr.net/npm/retell-client-js-sdk@2.0.7/+esm';
+         window.RetellWebClient = RetellWebClient;
+       </script>
 
        <!-- Hybrid Widget JavaScript -->
        <script>
@@ -480,22 +483,25 @@
            function waitForRetellSDK() {
                return new Promise((resolve) => {
                    if (window.RetellWebClient) {
+                       console.log('RetellWebClient already available');
                        resolve();
                        return;
                    }
 
                    const checkSDK = setInterval(() => {
                        if (window.RetellWebClient) {
+                           console.log('RetellWebClient loaded successfully');
                            clearInterval(checkSDK);
                            resolve();
                        }
                    }, 100);
 
-                   // Timeout after 10 seconds
+                   // Timeout after 15 seconds
                    setTimeout(() => {
+                       console.warn('RetellWebClient load timeout after 15 seconds');
                        clearInterval(checkSDK);
                        resolve();
-                   }, 10000);
+                   }, 15000);
                });
            }
 
@@ -765,19 +771,48 @@
                        console.log('Starting Retell voice call...');
                        elements.voiceButton.className = 'connecting';
                        elements.voiceButton.textContent = 'Connecting...';
-                       elements.voiceStatus.textContent = 'Connecting to Retell AI...';
+                       elements.voiceStatus.textContent = 'Getting access token...';
 
-                       // For demo - show that voice feature needs backend setup
-                       addVoiceMessage('system', 'Voice chat requires backend setup for Retell access tokens. Please configure your server endpoint.');
+                       // Call backend to get access token
+                       const tokenResponse = await fetch('http://localhost:3001/api/create-retell-call', {
+                           method: 'POST',
+                           headers: {
+                               'Content-Type': 'application/json'
+                           },
+                           body: JSON.stringify({
+                               user_name: 'Cold Lava User',
+                               session_id: Date.now().toString()
+                           })
+                       });
 
-                       // Reset button state
-                       elements.voiceButton.className = '';
-                       elements.voiceButton.textContent = 'Start Call';
-                       elements.voiceStatus.textContent = 'Voice chat requires server setup';
+                       if (!tokenResponse.ok) {
+                           const errorData = await tokenResponse.json();
+                           throw new Error(`Backend error: ${errorData.error || 'Unknown error'}`);
+                       }
+
+                       const { access_token, call_id } = await tokenResponse.json();
+                       console.log('Got access token, starting call...');
+
+                       elements.voiceStatus.textContent = 'Starting voice call...';
+
+                       // Start the call with Retell
+                       await retellClient.startCall({
+                           accessToken: access_token,
+                           sampleRate: 24000,
+                           enableUpdate: true
+                       });
+
+                       console.log('Retell call started with ID:', call_id);
 
                    } catch (error) {
                        console.error('Failed to start Retell call:', error);
-                       addVoiceMessage('system', 'Failed to start voice call: ' + error.message);
+
+                       if (error.message.includes('Backend error') || error.message.includes('fetch')) {
+                           addVoiceMessage('system', 'Backend server not running. Start the server with: cd /Users/oliver && npm install && npm start');
+                       } else {
+                           addVoiceMessage('system', 'Failed to start voice call: ' + error.message);
+                       }
+
                        elements.voiceButton.className = '';
                        elements.voiceButton.textContent = 'Start Call';
                        elements.voiceStatus.textContent = 'Click to start voice chat with Retell AI';
@@ -852,4 +887,3 @@
 
      </body>
      </html>
-
