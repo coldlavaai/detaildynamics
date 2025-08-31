@@ -1,828 +1,1708 @@
-  <!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Talk to Sophie | Cold Lava</title>
-    <style>
-      body {
-        margin: 0;
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        background: linear-gradient(to bottom, #00c7d2 0%, #0a0908 80%);
-        color: #ffffff;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        min-height: 100vh;
-        padding-top: 40px;
-      }
-
-      .logo {
-        width: 160px;
-        margin-bottom: 20px;
-      }
-
-      .sophie-image {
-        width: 220px;
-        border-radius: 20px;
-        box-shadow: 0 0 20px rgba(20, 184, 166, 0.4);
-        margin-bottom: 20px;
-      }
-
-      .text {
-        font-size: 1.2rem;
-        text-align: center;
-        max-width: 600px;
-        margin-bottom: 20px;
-      }
-
-      /* VAPI + Retell Hybrid Widget CSS - Fully Isolated */
-      :root {
-        --hybrid-primary-color: #d52329;
-        --hybrid-accent-color: #ffffff;
-        --retell-voice-color: #00c7d2;
-      }
-
-      #hybrid-widget {
-        position: fixed !important;
-        bottom: 20px !important;
-        right: 20px !important;
-        z-index: 10000 !important;
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
-        font-size: 14px !important;
-        line-height: 1.4 !important;
-        box-sizing: border-box !important;
-      }
-
-      #hybrid-widget *,
-      #hybrid-widget *::before,
-      #hybrid-widget *::after {
-        box-sizing: border-box !important;
-      }
-
-      #hybrid-chat-button {
-        width: 60px !important;
-        height: 60px !important;
-        border-radius: 50% !important;
-        background: var(--hybrid-primary-color) !important;
-        border: none !important;
-        color: var(--hybrid-accent-color) !important;
-        font-size: 24px !important;
-        cursor: pointer !important;
-        box-shadow: 0 4px 12px rgba(213, 35, 41, 0.3) !important;
-        transition: all 0.3s ease !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        outline: none !important;
-        user-select: none !important;
-      }
-
-      #hybrid-chat-button:hover {
-        transform: scale(1.05) !important;
-        box-shadow: 0 6px 20px rgba(213, 35, 41, 0.4) !important;
-      }
-
-      #hybrid-chat-panel {
-        position: absolute !important;
-        bottom: 70px !important;
-        right: 0 !important;
-        width: 350px !important;
-        height: 500px !important;
-        background: #000000 !important;
-        border-radius: 12px !important;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
-        border: 1px solid #333333 !important;
-        display: none !important;
-        flex-direction: column !important;
-        overflow: hidden !important;
-        font-family: inherit !important;
-      }
-
-      #hybrid-chat-panel.open {
-        display: flex !important;
-        animation: slideUp 0.3s ease-out !important;
-      }
-
-      @keyframes slideUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-
-      #hybrid-chat-header {
-        background: var(--hybrid-primary-color) !important;
-        color: var(--hybrid-accent-color) !important;
-        padding: 16px !important;
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        border-radius: 12px 12px 0 0 !important;
-      }
-
-      #hybrid-chat-title {
-        font-weight: 600 !important;
-        font-size: 16px !important;
-        margin: 0 !important;
-      }
-
-      #hybrid-close-button {
-        background: none !important;
-        border: none !important;
-        color: var(--hybrid-accent-color) !important;
-        font-size: 20px !important;
-        cursor: pointer !important;
-        padding: 4px !important;
-        border-radius: 4px !important;
-        transition: background 0.2s ease !important;
-      }
-
-      #hybrid-close-button:hover {
-        background: rgba(255, 255, 255, 0.1) !important;
-      }
-
-      /* Separate Message Containers */
-      #hybrid-text-messages, #hybrid-voice-messages {
-        flex: 1 !important;
-        padding: 16px !important;
-        overflow-y: auto !important;
-        background: #111111 !important;
-        scrollbar-width: thin !important;
-        display: none !important;
-      }
-
-      /* Show appropriate message container based on mode */
-      .hybrid-text-mode #hybrid-text-messages { display: block !important; }
-      .hybrid-voice-mode #hybrid-voice-messages { display: block !important; }
-
-      .hybrid-message {
-        padding: 12px !important;
-        border-radius: 8px !important;
-        margin-bottom: 12px !important;
-        max-width: 90% !important;
-        word-wrap: break-word !important;
-        font-size: 14px !important;
-        line-height: 1.4 !important;
-      }
-
-      .hybrid-message-user {
-        background: var(--hybrid-primary-color) !important;
-        color: var(--hybrid-accent-color) !important;
-        margin-left: 40px !important;
-        border-radius: 18px 18px 4px 18px !important;
-      }
-
-      .hybrid-message-assistant {
-        background: #222222 !important;
-        color: #ffffff !important;
-        border-left: 3px solid var(--hybrid-primary-color) !important;
-        border-radius: 18px 18px 18px 4px !important;
-      }
-
-      .hybrid-message-system {
-        background: #333333 !important;
-        color: #cccccc !important;
-        font-style: italic !important;
-        font-size: 12px !important;
-        text-align: center !important;
-        border-radius: 12px !important;
-      }
-
-      /* Voice message styling - Retell branded */
-      .hybrid-voice-message {
-        padding: 12px !important;
-        border-radius: 8px !important;
-        margin-bottom: 8px !important;
-        max-width: 95% !important;
-        word-wrap: break-word !important;
-        font-size: 14px !important;
-        line-height: 1.4 !important;
-      }
-
-      .hybrid-voice-message-user {
-        background: linear-gradient(135deg, var(--retell-voice-color), #008c94) !important;
-        color: white !important;
-        margin-left: 20px !important;
-        border-radius: 15px 15px 5px 15px !important;
-        border: 1px solid rgba(0, 199, 210, 0.3) !important;
-      }
-
-      .hybrid-voice-message-assistant {
-        background: linear-gradient(135deg, #222222, #333333) !important;
-        color: #ffffff !important;
-        border: 1px solid var(--retell-voice-color) !important;
-        border-left: 4px solid var(--retell-voice-color) !important;
-        border-radius: 15px 15px 15px 5px !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
-      }
-
-      .hybrid-voice-message-system {
-        background: linear-gradient(135deg, #1a1a1a, #2a2a2a) !important;
-        color: var(--retell-voice-color) !important;
-        font-style: italic !important;
-        font-size: 12px !important;
-        text-align: center !important;
-        border-radius: 20px !important;
-        border: 1px solid rgba(0, 199, 210, 0.3) !important;
-      }
-
-      #hybrid-input-area {
-        padding: 16px !important;
-        border-top: 1px solid #333333 !important;
-        background: #000000 !important;
-        border-radius: 0 0 12px 12px !important;
-      }
-
-      #hybrid-mode-toggle {
-        display: flex !important;
-        background: #333333 !important;
-        border-radius: 8px !important;
-        padding: 4px !important;
-        margin-bottom: 12px !important;
-      }
-
-      .hybrid-mode-button {
-        flex: 1 !important;
-        padding: 8px 12px !important;
-        border: none !important;
-        background: transparent !important;
-        border-radius: 4px !important;
-        font-size: 13px !important;
-        font-weight: 500 !important;
-        cursor: pointer !important;
-        transition: all 0.2s ease !important;
-        color: #cccccc !important;
-        outline: none !important;
-      }
-
-      .hybrid-mode-button.active {
-        background: #000000 !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
-      }
-
-      .hybrid-mode-button.active[data-mode="text"] {
-        color: var(--hybrid-primary-color) !important;
-      }
-
-      .hybrid-mode-button.active[data-mode="voice"] {
-        color: var(--retell-voice-color) !important;
-      }
-
-      .hybrid-mode-button:hover:not(.active) {
-        color: #ffffff !important;
-      }
-
-      #hybrid-text-input-container {
-        display: flex !important;
-        gap: 8px !important;
-      }
-
-      #hybrid-message-input {
-        flex: 1 !important;
-        padding: 8px 12px !important;
-        border: 1px solid #444444 !important;
-        border-radius: 6px !important;
-        outline: none !important;
-        font-size: 14px !important;
-        font-family: inherit !important;
-        transition: border-color 0.2s ease !important;
-        color: #ffffff !important;
-        background: #222222 !important;
-      }
-
-      #hybrid-message-input:focus {
-        border-color: var(--hybrid-primary-color) !important;
-        box-shadow: 0 0 0 1px var(--hybrid-primary-color) !important;
-      }
-
-      #hybrid-send-button {
-        background: var(--hybrid-primary-color) !important;
-        color: var(--hybrid-accent-color) !important;
-        border: none !important;
-        padding: 8px 16px !important;
-        border-radius: 6px !important;
-        cursor: pointer !important;
-        font-weight: 500 !important;
-        font-size: 14px !important;
-        transition: all 0.2s ease !important;
-        outline: none !important;
-      }
-
-      #hybrid-send-button:hover {
-        filter: brightness(1.1) !important;
-      }
-
-      #hybrid-send-button:disabled {
-        opacity: 0.6 !important;
-        cursor: not-allowed !important;
-      }
-
-      #hybrid-voice-controls {
-        display: none !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        gap: 12px !important;
-      }
-
-      /* Retell Voice Button Styles */
-      #hybrid-voice-button {
-        width: 140px !important;
-        height: 45px !important;
-        border-radius: 25px !important;
-        border: 2px solid var(--retell-voice-color) !important;
-        cursor: pointer !important;
-        font-size: 14px !important;
-        font-weight: 600 !important;
-        transition: all 0.3s ease !important;
-        outline: none !important;
-        background: var(--retell-voice-color) !important;
-        color: white !important;
-        box-shadow: 0 4px 15px rgba(0, 199, 210, 0.2) !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.5px !important;
-      }
-
-      #hybrid-voice-button:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 25px rgba(0, 199, 210, 0.3) !important;
-      }
-
-      /* Voice Button States for Retell */
-      #hybrid-voice-button.connecting {
-        background: linear-gradient(45deg, #f97316, #ea580c) !important;
-        color: white !important;
-        border-color: #f97316 !important;
-        animation: retellConnecting 1.5s ease-in-out infinite !important;
-      }
-
-      #hybrid-voice-button.active {
-        background: linear-gradient(45deg, #dc2626, #b91c1c) !important;
-        color: white !important;
-        border-color: #dc2626 !important;
-        animation: retellActive 2s ease-in-out infinite !important;
-      }
-
-      /* Retell Voice Button Animations */
-      @keyframes retellConnecting {
-        0%, 100% {
-          box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4), 0 0 0 0 rgba(249, 115, 22, 0.7);
-        }
-        50% {
-          box-shadow: 0 6px 25px rgba(249, 115, 22, 0.6), 0 0 0 10px rgba(249, 115, 22, 0);
-        }
-      }
-
-      @keyframes retellActive {
-        0%, 100% {
-          box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4), 0 0 0 0 rgba(220, 38, 38, 0.7);
-        }
-        50% {
-          box-shadow: 0 6px 25px rgba(220, 38, 38, 0.6), 0 0 0 8px rgba(220, 38, 38, 0);
-        }
-      }
-
-      #hybrid-voice-status {
-        font-size: 13px !important;
-        color: #cccccc !important;
-        text-align: center !important;
-        min-height: 18px !important;
-      }
-
-      /* Mode switching */
-      .hybrid-text-mode #hybrid-text-input-container { display: flex !important; }
-      .hybrid-text-mode #hybrid-voice-controls { display: none !important; }
-      .hybrid-voice-mode #hybrid-text-input-container { display: none !important; }
-      .hybrid-voice-mode #hybrid-voice-controls { display: flex !important; }
-
-      /* Mobile responsive */
-      @media (max-width: 480px) {
-        #hybrid-widget {
-          bottom: 10px !important;
-          right: 10px !important;
-        }
-
-        #hybrid-chat-panel {
-          width: calc(100vw - 20px) !important;
-          max-width: 350px !important;
-          height: 80vh !important;
-          max-height: 500px !important;
-        }
-      }
-    </style>
-  </head>
-  <body>
-
-    <img src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/LAVA_1.png?v=1753207208" alt="Cold Lava Logo" class="logo" />
-
-    <img src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/f63e1b45-8157-4920-ab3f-2833797fb6b9.png?v=1753867612" alt="Sophie" class="sophie-image" />
-
-    <!-- VAPI Text + Retell Voice Hybrid Widget -->
-    <div id="hybrid-widget">
-        <!-- Chat Button -->
-        <button id="hybrid-chat-button" aria-label="Open chat">💬</button>
-
-        <!-- Chat Panel -->
-        <div id="hybrid-chat-panel" role="dialog" aria-labelledby="hybrid-chat-title" class="hybrid-text-mode">
-            <!-- Header -->
-            <div id="hybrid-chat-header">
-                <h3 id="hybrid-chat-title">Talk to Sophie</h3>
-                <button id="hybrid-close-button" aria-label="Close chat">×</button>
-            </div>
-
-            <!-- Messages - Separate containers for text and voice -->
-            <div id="hybrid-text-messages" role="log" aria-live="polite" aria-label="Text chat messages">
-                <div class="hybrid-message hybrid-message-assistant">
-                    Hey! I'm Sophie from Cold Lava. You can chat with me via text or voice. How can I help you today?
-                </div>
-            </div>
-
-            <div id="hybrid-voice-messages" role="log" aria-live="polite" aria-label="Voice chat messages">
-                <div class="hybrid-voice-message hybrid-voice-message-system">
-                    🎙️ Voice chat powered by Retell AI - Click "Start Call" to begin
-                </div>
-            </div>
-
-            <!-- Input Area -->
-            <div id="hybrid-input-area">
-                <!-- Mode Toggle -->
-                <div id="hybrid-mode-toggle">
-                    <button class="hybrid-mode-button active" data-mode="text">💬 Text Chat</button>
-                    <button class="hybrid-mode-button" data-mode="voice">🎙️ Voice Chat</button>
-                </div>
-
-                <!-- Text Chat Input -->
-                <div id="hybrid-text-input-container">
-                    <input 
-                        id="hybrid-message-input" 
-                        type="text" 
-                        placeholder="Type your message..."
-                        aria-label="Message input"
-                        autocomplete="off"
-                    >
-                    <button id="hybrid-send-button" aria-label="Send message">Send</button>
-                </div>
-
-                <!-- Voice Chat Controls -->
-                <div id="hybrid-voice-controls">
-                    <button id="hybrid-voice-button" aria-label="Start voice chat">Start Call</button>
-                    <div id="hybrid-voice-status">Click to start voice chat with Retell AI</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Include Retell JS SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/retell-client-js-sdk@2.0.7/dist/retell-client-js-sdk.min.js"></script>
-
-    <!-- Hybrid Widget JavaScript -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Widget state
-            let previousVAPIChatId = null;
-            let isOpen = false;
-            let currentMode = 'text';
-            let retellClient = null;
-            let isVoiceActive = false;
-            let retellInitialized = false;
-            let isConnecting = false;
-
-            // Configuration with your specific agent IDs
-            const CONFIG = {
-                vapi: {
-                    apiKey: 'a025d33b-8e6a-45ee-bda4-ec22db21e1b6',
-                    assistantId: 'c86d0583-5a3a-4085-8976-28bff7f0e71b',
-                    apiUrl: 'https://api.vapi.ai/chat'
-                },
-                retell: {
-                    agentId: 'agent_6b974ba4769d7b7b8df27d05d0'
-                }
-            };
-
-            // Elements
-            const elements = {
-                button: document.getElementById('hybrid-chat-button'),
-                panel: document.getElementById('hybrid-chat-panel'),
-                closeButton: document.getElementById('hybrid-close-button'),
-                textMessages: document.getElementById('hybrid-text-messages'),
-                voiceMessages: document.getElementById('hybrid-voice-messages'),
-                input: document.getElementById('hybrid-message-input'),
-                sendButton: document.getElementById('hybrid-send-button'),
-                modeButtons: document.querySelectorAll('.hybrid-mode-button'),
-                voiceButton: document.getElementById('hybrid-voice-button'),
-                voiceStatus: document.getElementById('hybrid-voice-status')
-            };
-
-            // Initialize Retell client
-            setTimeout(() => {
-                initializeRetell();
-            }, 1000);
-
-            function initializeRetell() {
-                try {
-                    if (window.RetellWebClient) {
-                        console.log('Initializing Retell client...');
-                        retellClient = new window.RetellWebClient();
-
-                        // Set up Retell event listeners
-                        retellClient.on('call_started', () => {
-                            console.log('Retell call started');
-                            isVoiceActive = true;
-                            elements.voiceButton.className = 'active';
-                            elements.voiceButton.textContent = 'End Call';
-                            elements.voiceStatus.textContent = 'Connected - speak now!';
-                            addVoiceMessage('system', '🎙️ Voice call connected via Retell AI');
-                        });
-
-                        retellClient.on('call_ended', () => {
-                            console.log('Retell call ended');
-                            endVoiceCall();
-                        });
-
-                        retellClient.on('agent_start_talking', () => {
-                            console.log('Agent started talking');
-                            elements.voiceStatus.textContent = 'Sophie is speaking...';
-                        });
-
-                        retellClient.on('agent_stop_talking', () => {
-                            console.log('Agent stopped talking');
-                            elements.voiceStatus.textContent = 'Your turn - speak now';
-                        });
-
-                        retellClient.on('update', (update) => {
-                            console.log('Transcript update:', update);
-                            if (update.transcript) {
-                                handleTranscriptUpdate(update.transcript);
-                            }
-                        });
-
-                        retellClient.on('error', (error) => {
-                            console.error('Retell error:', error);
-                            addVoiceMessage('system', `Voice error: ${error.message || 'Connection failed'}`);
-                            endVoiceCall();
-                        });
-
-                        retellInitialized = true;
-                        elements.voiceStatus.textContent = 'Click to start voice chat with Retell AI';
-                        console.log('Retell client initialized successfully');
-
-                    } else {
-                        console.error('Retell SDK not loaded');
-                        elements.voiceStatus.textContent = 'Voice SDK not available';
-                    }
-                } catch (error) {
-                    console.error('Failed to initialize Retell:', error);
-                    elements.voiceStatus.textContent = 'Voice initialization failed';
-                }
-            }
-
-            function handleTranscriptUpdate(transcript) {
-                console.log('Transcript:', transcript);
-            }
-
-            // Event listeners
-            elements.button.addEventListener('click', toggleChat);
-            elements.closeButton.addEventListener('click', closeChat);
-            elements.sendButton.addEventListener('click', sendTextMessage);
-            elements.input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    sendTextMessage();
-                }
-            });
-
-            elements.modeButtons.forEach(button => {
-                button.addEventListener('click', () => switchMode(button.dataset.mode));
-            });
-
-            elements.voiceButton.addEventListener('click', toggleVoiceCall);
-
-            // Functions
-            function toggleChat() {
-                if (isOpen) {
-                    closeChat();
-                } else {
-                    openChat();
-                }
-            }
-
-            function openChat() {
-                elements.panel.classList.add('open');
-                elements.panel.style.display = 'flex';
-                isOpen = true;
-                setTimeout(() => elements.input.focus(), 300);
-            }
-
-            function closeChat() {
-                elements.panel.classList.remove('open');
-                elements.panel.style.display = 'none';
-                isOpen = false;
-
-                if (isVoiceActive) {
-                    endVoiceCall();
-                }
-            }
-
-            function switchMode(mode) {
-                currentMode = mode;
-
-                elements.modeButtons.forEach(button => {
-                    button.classList.toggle('active', button.dataset.mode === mode);
-                });
-
-                elements.panel.className = elements.panel.className.replace(/hybrid-(text|voice)-mode/, '');
-                elements.panel.classList.add(`hybrid-${mode}-mode`);
-
-                if (mode === 'text') {
-                    setTimeout(() => elements.input.focus(), 100);
-                    if (isVoiceActive) {
-                        endVoiceCall();
-                    }
-                }
-            }
-
-            // VAPI Text Chat Functions
-            async function sendTextMessage() {
-                const message = elements.input.value.trim();
-                if (!message) return;
-
-                elements.sendButton.disabled = true;
-                elements.sendButton.textContent = 'Sending...';
-
-                addTextMessage('user', message);
-                elements.input.value = '';
-
-                const typingIndicator = addTypingIndicator();
-
-                try {
-                    const response = await fetch(CONFIG.vapi.apiUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${CONFIG.vapi.apiKey}`
-                        },
-                        body: JSON.stringify({
-                            assistantId: CONFIG.vapi.assistantId,
-                            input: message,
-                            previousChatId: previousVAPIChatId
-                        })
-                    });
-
-                    typingIndicator.remove();
-
-                    if (!response.ok) {
-                        addTextMessage('system', `Sorry, I encountered an error (${response.status}). Please try again.`);
-                        return;
-                    }
-
-                    const data = await response.json();
-
-                    if (data.id) {
-                        previousVAPIChatId = data.id;
-                    }
-
-                    const assistantMessage = extractVAPIMessage(data);
-                    addTextMessage('assistant', assistantMessage);
-
-                } catch (error) {
-                    console.error('VAPI text chat error:', error);
-                    typingIndicator.remove();
-                    addTextMessage('system', 'Connection error. Please try again.');
-                } finally {
-                    elements.sendButton.disabled = false;
-                    elements.sendButton.textContent = 'Send';
-                    elements.input.focus();
-                }
-            }
-
-            function extractVAPIMessage(data) {
-                if (data.output && Array.isArray(data.output) && data.output.length > 0) {
-                    const lastOutput = data.output[data.output.length - 1];
-                    if (lastOutput.content) return lastOutput.content;
-                    if (lastOutput.text) return lastOutput.text;
-                    if (lastOutput.message) return lastOutput.message;
-                }
-
-                if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
-                    const lastMessage = data.messages[data.messages.length - 1];
-                    if (lastMessage.content) return lastMessage.content;
-                    if (lastMessage.text) return lastMessage.text;
-                    if (lastMessage.message) return lastMessage.message;
-                }
-
-                if (data.response) return data.response;
-                if (data.reply) return data.reply;
-                if (data.text) return data.text;
-                if (data.content) return data.content;
-
-                return 'I received your message but had trouble with the response format. Please try again.';
-            }
-
-            // Retell Voice Chat Functions
-            async function toggleVoiceCall() {
-                if (!retellInitialized || !retellClient) {
-                    addVoiceMessage('system', 'Voice system is not ready yet. Please try again in a moment.');
-                    return;
-                }
-
-                if (isVoiceActive) {
-                    endVoiceCall();
-                } else {
-                    startVoiceCall();
-                }
-            }
-
-            async function startVoiceCall() {
-                if (isConnecting) return;
-
-                try {
-                    isConnecting = true;
-                    console.log('Starting Retell voice call...');
-                    elements.voiceButton.className = 'connecting';
-                    elements.voiceButton.textContent = 'Connecting...';
-                    elements.voiceStatus.textContent = 'Connecting to Retell AI...';
-
-                    // For demo - show that voice feature needs backend setup
-                    addVoiceMessage('system', 'Voice chat requires backend setup for Retell access tokens. Please configure your server endpoint.');
-
-                    // Reset button state
-                    elements.voiceButton.className = '';
-                    elements.voiceButton.textContent = 'Start Call';
-                    elements.voiceStatus.textContent = 'Voice chat requires server setup';
-
-                } catch (error) {
-                    console.error('Failed to start Retell call:', error);
-                    addVoiceMessage('system', 'Failed to start voice call: ' + error.message);
-                    elements.voiceButton.className = '';
-                    elements.voiceButton.textContent = 'Start Call';
-                    elements.voiceStatus.textContent = 'Click to start voice chat with Retell AI';
-                } finally {
-                    isConnecting = false;
-                }
-            }
-
-            function endVoiceCall() {
-                try {
-                    isVoiceActive = false;
-                    elements.voiceButton.className = '';
-                    elements.voiceButton.textContent = 'Start Call';
-                    elements.voiceStatus.textContent = 'Click to start voice chat with Retell AI';
-
-                    if (retellClient) {
-                        retellClient.stopCall();
-                    }
-
-                    console.log('Retell voice call ended');
-                } catch (error) {
-                    console.error('Error ending Retell call:', error);
-                }
-            }
-
-            // Message display functions
-            function addTextMessage(role, text) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `hybrid-message hybrid-message-${role}`;
-                messageDiv.textContent = text;
-                elements.textMessages.appendChild(messageDiv);
-                scrollToBottom(elements.textMessages);
-                return messageDiv;
-            }
-
-            function addVoiceMessage(role, text) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `hybrid-voice-message hybrid-voice-message-${role}`;
-                messageDiv.textContent = text;
-                elements.voiceMessages.appendChild(messageDiv);
-                scrollToBottom(elements.voiceMessages);
-                return messageDiv;
-            }
-
-            function addTypingIndicator() {
-                const typingDiv = document.createElement('div');
-                typingDiv.className = 'hybrid-message hybrid-message-system';
-                typingDiv.innerHTML = `
-                    <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
-                        <span style="animation: fade 1.4s ease-in-out infinite; animation-delay: 0s;">•</span>
-                        <span style="animation: fade 1.4s ease-in-out infinite; animation-delay: 0.2s;">•</span>
-                        <span style="animation: fade 1.4s ease-in-out infinite; animation-delay: 0.4s;">•</span>
-                        <span style="margin-left: 8px;">Sophie is typing...</span>
-                    </div>
-                    <style>
-                        @keyframes fade {
-                            0%, 80%, 100% { opacity: 0.3; }
-                            40% { opacity: 1; }
-                        }
-                    </style>
-                `;
-                elements.textMessages.appendChild(typingDiv);
-                scrollToBottom(elements.textMessages);
-                return typingDiv;
-            }
-
-            function scrollToBottom(container) {
-                container.scrollTop = container.scrollHeight;
-            }
-        });
-    </script>
-
-  </body>
-  </html>
+<!DOCTYPE html>                                                                                                                                               
+     <html lang="en">
+     <head>
+       <meta charset="UTF-8" />
+       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+       <title>Talk to Sophie | Cold Lava</title>
+       <style>
+         body {
+           margin: 0;
+           font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+           background: linear-gradient(to bottom, #00c7d2 0%, #0a0908 80%);
+           color: #ffffff;
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           justify-content: flex-start;
+           min-height: 100vh;
+           padding-top: 40px;
+         }
+
+         .logo {
+           width: 160px;
+           margin-bottom: 20px;
+         }
+
+         .sophie-image {
+           width: 220px;
+           border-radius: 20px;
+           box-shadow: 0 0 20px rgba(20, 184, 166, 0.4);
+           margin-bottom: 20px;
+         }
+
+         .text {
+           font-size: 1.2rem;
+           text-align: center;
+           max-width: 600px;
+           margin-bottom: 20px;
+         }
+
+         /* VAPI + Retell Hybrid Widget CSS - Fully Isolated */
+         :root {
+           --hybrid-primary-color: #d52329;
+           --hybrid-accent-color: #ffffff;
+           --retell-voice-color: #00c7d2;
+         }
+
+         #hybrid-widget {
+           position: fixed !important;
+           bottom: 20px !important;
+           right: 20px !important;
+           z-index: 10000 !important;
+           font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+           font-size: 14px !important;
+           line-height: 1.4 !important;
+           box-sizing: border-box !important;
+         }
+
+         #hybrid-widget *,
+         #hybrid-widget *::before,
+         #hybrid-widget *::after {
+           box-sizing: border-box !important;
+         }
+
+         #hybrid-chat-button {
+           width: 60px !important;
+           height: 60px !important;
+           border-radius: 50% !important;
+           background: var(--hybrid-primary-color) !important;
+           border: none !important;
+           color: var(--hybrid-accent-color) !important;
+           font-size: 24px !important;
+           cursor: pointer !important;
+           box-shadow: 0 4px 12px rgba(213, 35, 41, 0.3) !important;
+           transition: all 0.3s ease !important;
+           display: flex !important;
+           align-items: center !important;
+           justify-content: center !important;
+           outline: none !important;
+           user-select: none !important;
+         }
+
+         #hybrid-chat-button:hover {
+           transform: scale(1.05) !important;
+           box-shadow: 0 6px 20px rgba(213, 35, 41, 0.4) !important;
+         }
+
+         #hybrid-chat-panel {
+           position: absolute !important;
+           bottom: 70px !important;
+           right: 0 !important;
+           width: 350px !important;
+           height: 500px !important;
+           background: #000000 !important;
+           border-radius: 12px !important;
+           box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+           border: 1px solid #333333 !important;
+           display: none !important;
+           flex-direction: column !important;
+           overflow: hidden !important;
+           font-family: inherit !important;
+         }
+
+         #hybrid-chat-panel.open {
+           display: flex !important;
+           animation: slideUp 0.3s ease-out !important;
+         }
+
+         @keyframes slideUp {
+           from { opacity: 0; transform: translateY(20px); }
+           to { opacity: 1; transform: translateY(0); }
+         }
+
+         #hybrid-chat-header {
+           background: var(--hybrid-primary-color) !important;
+           color: var(--hybrid-accent-color) !important;
+           padding: 16px !important;
+           display: flex !important;
+           justify-content: space-between !important;
+           align-items: center !important;
+           border-radius: 12px 12px 0 0 !important;
+         }
+
+         #hybrid-chat-title {
+           font-weight: 600 !important;
+           font-size: 16px !important;
+           margin: 0 !important;
+         }
+
+         #hybrid-close-button {
+           background: none !important;
+           border: none !important;
+           color: var(--hybrid-accent-color) !important;
+           font-size: 20px !important;
+           cursor: pointer !important;
+           padding: 4px !important;
+           border-radius: 4px !important;
+           transition: background 0.2s ease !important;
+         }
+
+         #hybrid-close-button:hover {
+           background: rgba(255, 255, 255, 0.1) !important;
+         }
+
+         /* Separate Message Containers */
+         #hybrid-text-messages, #hybrid-voice-messages {
+           flex: 1 !important;
+           padding: 16px !important;
+           overflow-y: auto !important;
+           background: #111111 !important;
+           scrollbar-width: thin !important;
+           display: none !important;
+         }
+
+         /* Show appropriate message container based on mode */
+         .hybrid-text-mode #hybrid-text-messages { display: block !important; }
+         .hybrid-voice-mode #hybrid-voice-messages { display: block !important; }
+
+         .hybrid-message {
+           padding: 12px !important;
+           border-radius: 8px !important;
+           margin-bottom: 12px !important;
+           max-width: 90% !important;
+           word-wrap: break-word !important;
+           font-size: 14px !important;
+           line-height: 1.4 !important;
+         }
+
+         .hybrid-message-user {
+           background: var(--hybrid-primary-color) !important;
+           color: var(--hybrid-accent-color) !important;
+           margin-left: 40px !important;
+           border-radius: 18px 18px 4px 18px !important;
+         }
+
+         .hybrid-message-assistant {
+           background: #222222 !important;
+           color: #ffffff !important;
+           border-left: 3px solid var(--hybrid-primary-color) !important;
+           border-radius: 18px 18px 18px 4px !important;
+         }
+
+         .hybrid-message-system {
+           background: #333333 !important;
+           color: #cccccc !important;
+           font-style: italic !important;
+           font-size: 12px !important;
+           text-align: center !important;
+           border-radius: 12px !important;
+         }
+
+         /* Voice message styling - Retell branded */
+         .hybrid-voice-message {
+           padding: 12px !important;
+           border-radius: 8px !important;
+           margin-bottom: 8px !important;
+           max-width: 95% !important;
+           word-wrap: break-word !important;
+           font-size: 14px !important;
+           line-height: 1.4 !important;
+         }
+
+         .hybrid-voice-message-user {
+           background: linear-gradient(135deg, var(--retell-voice-color), #008c94) !important;
+           color: white !important;
+           margin-left: 20px !important;
+           border-radius: 15px 15px 5px 15px !important;
+           border: 1px solid rgba(0, 199, 210, 0.3) !important;
+         }
+
+         .hybrid-voice-message-assistant {
+           background: linear-gradient(135deg, #222222, #333333) !important;
+           color: #ffffff !important;
+           border: 1px solid var(--retell-voice-color) !important;
+           border-left: 4px solid var(--retell-voice-color) !important;
+           border-radius: 15px 15px 15px 5px !important;
+           box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+         }
+
+         .hybrid-voice-message-system {
+           background: linear-gradient(135deg, #1a1a1a, #2a2a2a) !important;
+           color: var(--retell-voice-color) !important;
+           font-style: italic !important;
+           font-size: 12px !important;
+           text-align: center !important;
+           border-radius: 20px !important;
+           border: 1px solid rgba(0, 199, 210, 0.3) !important;
+         }
+
+         #hybrid-input-area {
+           padding: 16px !important;
+           border-top: 1px solid #333333 !important;
+           background: #000000 !important;
+           border-radius: 0 0 12px 12px !important;
+         }
+
+         #hybrid-mode-toggle {
+           display: flex !important;
+           background: #333333 !important;
+           border-radius: 8px !important;
+           padding: 4px !important;
+           margin-bottom: 12px !important;
+         }
+
+         .hybrid-mode-button {
+           flex: 1 !important;
+           padding: 8px 12px !important;
+           border: none !important;
+           background: transparent !important;
+           border-radius: 4px !important;
+           font-size: 13px !important;
+           font-weight: 500 !important;
+           cursor: pointer !important;
+           transition: all 0.2s ease !important;
+           color: #cccccc !important;
+           outline: none !important;
+         }
+
+         .hybrid-mode-button.active {
+           background: #000000 !important;
+           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+         }
+
+         .hybrid-mode-button.active[data-mode="text"] {
+           color: var(--hybrid-primary-color) !important;
+         }
+
+         .hybrid-mode-button.active[data-mode="voice"] {
+           color: var(--retell-voice-color) !important;
+         }
+
+         .hybrid-mode-button:hover:not(.active) {
+           color: #ffffff !important;
+         }
+
+         #hybrid-text-input-container {
+           display: flex !important;
+           gap: 8px !important;
+         }
+
+         #hybrid-message-input {
+           flex: 1 !important;
+           padding: 8px 12px !important;
+           border: 1px solid #444444 !important;
+           border-radius: 6px !important;
+           outline: none !important;
+           font-size: 14px !important;
+           font-family: inherit !important;
+           transition: border-color 0.2s ease !important;
+           color: #ffffff !important;
+           background: #222222 !important;
+         }
+
+         #hybrid-message-input:focus {
+           border-color: var(--hybrid-primary-color) !important;
+           box-shadow: 0 0 0 1px var(--hybrid-primary-color) !important;
+         }
+
+         #hybrid-send-button {
+           background: var(--hybrid-primary-color) !important;
+           color: var(--hybrid-accent-color) !important;
+           border: none !important;
+           padding: 8px 16px !important;
+           border-radius: 6px !important;
+           cursor: pointer !important;
+           font-weight: 500 !important;
+           font-size: 14px !important;
+           transition: all 0.2s ease !important;
+           outline: none !important;
+         }
+
+         #hybrid-send-button:hover {
+           filter: brightness(1.1) !important;
+         }
+
+         #hybrid-send-button:disabled {
+           opacity: 0.6 !important;
+           cursor: not-allowed !important;
+         }
+
+         #hybrid-voice-controls {
+           display: none !important;
+           flex-direction: column !important;
+           align-items: center !important;
+           gap: 12px !important;
+         }
+
+         /* Retell Voice Button Styles */
+         #hybrid-voice-button {
+           width: 140px !important;
+           height: 45px !important;
+           border-radius: 25px !important;
+           border: 2px solid var(--retell-voice-color) !important;
+           cursor: pointer !important;
+           font-size: 14px !important;
+           font-weight: 600 !important;
+           transition: all 0.3s ease !important;
+           outline: none !important;
+           background: var(--retell-voice-color) !important;
+           color: white !important;
+           box-shadow: 0 4px 15px rgba(0, 199, 210, 0.2) !important;
+           text-transform: uppercase !important;
+           letter-spacing: 0.5px !important;
+         }
+
+         #hybrid-voice-button:hover {
+           transform: translateY(-2px) !important;
+           box-shadow: 0 6px 25px rgba(0, 199, 210, 0.3) !important;
+         }
+
+         /* Voice Button States for Retell */
+         #hybrid-voice-button.connecting {
+           background: linear-gradient(45deg, #f97316, #ea580c) !important;
+           color: white !important;
+           border-color: #f97316 !important;
+           animation: retellConnecting 1.5s ease-in-out infinite !important;
+         }
+
+         #hybrid-voice-button.active {
+           background: linear-gradient(45deg, #dc2626, #b91c1c) !important;
+           color: white !important;
+           border-color: #dc2626 !important;
+           animation: retellActive 2s ease-in-out infinite !important;
+         }
+
+         /* Retell Voice Button Animations */
+         @keyframes retellConnecting {
+           0%, 100% {
+             box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4), 0 0 0 0 rgba(249, 115, 22, 0.7);
+           }
+           50% {
+             box-shadow: 0 6px 25px rgba(249, 115, 22, 0.6), 0 0 0 10px rgba(249, 115, 22, 0);
+           }
+         }
+
+         @keyframes retellActive {
+           0%, 100% {
+             box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4), 0 0 0 0 rgba(220, 38, 38, 0.7);
+           }
+           50% {
+             box-shadow: 0 6px 25px rgba(220, 38, 38, 0.6), 0 0 0 8px rgba(220, 38, 38, 0);
+           }
+         }
+
+         #hybrid-voice-status {
+           font-size: 13px !important;
+           color: #cccccc !important;
+           text-align: center !important;
+           min-height: 18px !important;
+         }
+
+         /* Mode switching */
+         .hybrid-text-mode #hybrid-text-input-container { display: flex !important; }
+         .hybrid-text-mode #hybrid-voice-controls { display: none !important; }
+         .hybrid-voice-mode #hybrid-text-input-container { display: none !important; }
+         .hybrid-voice-mode #hybrid-voice-controls { display: flex !important; }
+
+         /* Mobile responsive */
+         @media (max-width: 480px) {
+           #hybrid-widget {
+             bottom: 10px !important;
+             right: 10px !important;
+           }
+
+           #hybrid-chat-panel {
+             width: calc(100vw - 20px) !important;
+             max-width: 350px !important;
+             height: 80vh !important;
+             max-height: 500px !important;
+           }
+         }
+       </style>
+     </head>
+     <body>
+
+       <img src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/LAVA_1.png?v=1753207208" alt="Cold Lava Logo" class="logo" />
+
+       <img src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/f63e1b45-8157-4920-ab3f-2833797fb6b9.png?v=1753867612" alt="Sophie" class="sophie-image" />
+
+       <!-- VAPI Text + Retell Voice Hybrid Widget -->
+       <div id="hybrid-widget">
+           <!-- Chat Button -->
+           <button id="hybrid-chat-button" aria-label="Open chat">💬</button>
+
+           <!-- Chat Panel -->
+           <div id="hybrid-chat-panel" role="dialog" aria-labelledby="hybrid-chat-title" class="hybrid-text-mode">
+               <!-- Header -->
+               <div id="hybrid-chat-header">
+                   <h3 id="hybrid-chat-title">Talk to Sophie</h3>
+                   <button id="hybrid-close-button" aria-label="Close chat">×</button>
+               </div>
+
+               <!-- Messages - Separate containers for text and voice -->
+               <div id="hybrid-text-messages" role="log" aria-live="polite" aria-label="Text chat messages">
+                   <div class="hybrid-message hybrid-message-assistant">
+                       Hey! I'm Sophie from Cold Lava. You can chat with me via text or voice. How can I help you today?
+                   </div>
+               </div>
+
+               <div id="hybrid-voice-messages" role="log" aria-live="polite" aria-label="Voice chat messages">
+                   <div class="hybrid-voice-message hybrid-voice-message-system">
+                       🎙️ Voice chat powered by Retell AI - Click "Start Call" to begin
+                   </div>
+               </div>
+
+               <!-- Input Area -->
+               <div id="hybrid-input-area">
+                   <!-- Mode Toggle -->
+                   <div id="hybrid-mode-toggle">
+                       <button class="hybrid-mode-button active" data-mode="text">💬 Text Chat</button>
+                       <button class="hybrid-mode-button" data-mode="voice">🎙️ Voice Chat</button>
+                   </div>
+
+                   <!-- Text Chat Input -->
+                   <div id="hybrid-text-input-container">
+                       <input 
+                           id="hybrid-message-input" 
+                           type="text" 
+                           placeholder="Type your message..."
+                           aria-label="Message input"
+                           autocomplete="off"
+                       >
+                       <button id="hybrid-send-button" aria-label="Send message">Send</button>
+                   </div>
+
+                   <!-- Voice Chat Controls -->
+                   <div id="hybrid-voice-controls">
+                       <button id="hybrid-voice-button" aria-label="Start voice chat">Start Call</button>
+                       <div id="hybrid-voice-status">Click to start voice chat with Retell AI</div>
+                   </div>
+               </div>
+           </div>
+       </div>
+
+       <!-- Include Retell JS SDK -->
+       <script src="https://cdn.jsdelivr.net/npm/retell-client-js-sdk@2.0.7/dist/retell-client-js-sdk.min.js"></script>
+
+       <!-- Hybrid Widget JavaScript -->
+       <script>
+           // Wait for Retell SDK to load
+           function waitForRetellSDK() {
+               return new Promise((resolve) => {
+                   if (window.RetellWebClient) {
+                       resolve();
+                       return;
+                   }
+
+                   const checkSDK = setInterval(() => {
+                       if (window.RetellWebClient) {
+                           clearInterval(checkSDK);
+                           resolve();
+                       }
+                   }, 100);
+
+                   // Timeout after 10 seconds
+                   setTimeout(() => {
+                       clearInterval(checkSDK);
+                       resolve();
+                   }, 10000);
+               });
+           }
+
+           document.addEventListener('DOMContentLoaded', async function() {
+               // Wait for Retell SDK to load
+               await waitForRetellSDK();
+               // Widget state
+               let previousVAPIChatId = null;
+               let isOpen = false;
+               let currentMode = 'text';
+               let retellClient = null;
+               let isVoiceActive = false;
+               let retellInitialized = false;
+               let isConnecting = false;
+
+               // Configuration with your specific agent IDs
+               const CONFIG = {
+                   vapi: {
+                       apiKey: 'a025d33b-8e6a-45ee-bda4-ec22db21e1b6',
+                       assistantId: 'c86d0583-5a3a-4085-8976-28bff7f0e71b',
+                       apiUrl: 'https://api.vapi.ai/chat'
+                   },
+                   retell: {
+                       agentId: 'agent_6b974ba4769d7b7b8df27d05d0'
+                   }
+               };
+
+               // Elements
+               const elements = {
+                   button: document.getElementById('hybrid-chat-button'),
+                   panel: document.getElementById('hybrid-chat-panel'),
+                   closeButton: document.getElementById('hybrid-close-button'),
+                   textMessages: document.getElementById('hybrid-text-messages'),
+                   voiceMessages: document.getElementById('hybrid-voice-messages'),
+                   input: document.getElementById('hybrid-message-input'),
+                   sendButton: document.getElementById('hybrid-send-button'),
+                   modeButtons: document.querySelectorAll('.hybrid-mode-button'),
+                   voiceButton: document.getElementById('hybrid-voice-button'),
+                   voiceStatus: document.getElementById('hybrid-voice-status')
+               };
+
+               // Initialize Retell client
+               setTimeout(() => {
+                   initializeRetell();
+               }, 1000);
+
+               function initializeRetell() {
+                   try {
+                       if (window.RetellWebClient) {
+                           console.log('Initializing Retell client...');
+                           retellClient = new window.RetellWebClient();
+
+                           // Set up Retell event listeners
+                           retellClient.on('call_started', () => {
+                               console.log('Retell call started');
+                               isVoiceActive = true;
+                               elements.voiceButton.className = 'active';
+                               elements.voiceButton.textContent = 'End Call';
+                               elements.voiceStatus.textContent = 'Connected - speak now!';
+                               addVoiceMessage('system', '🎙️ Voice call connected via Retell AI');
+                           });
+
+                           retellClient.on('call_ended', () => {
+                               console.log('Retell call ended');
+                               endVoiceCall();
+                           });
+
+                           retellClient.on('agent_start_talking', () => {
+                               console.log('Agent started talking');
+                               elements.voiceStatus.textContent = 'Sophie is speaking...';
+                           });
+
+                           retellClient.on('agent_stop_talking', () => {
+                               console.log('Agent stopped talking');
+                               elements.voiceStatus.textContent = 'Your turn - speak now';
+                           });
+
+                           retellClient.on('update', (update) => {
+                               console.log('Transcript update:', update);
+                               if (update.transcript) {
+                                   handleTranscriptUpdate(update.transcript);
+                               }
+                           });
+
+                           retellClient.on('error', (error) => {
+                               console.error('Retell error:', error);
+                               addVoiceMessage('system', `Voice error: ${error.message || 'Connection failed'}`);
+                               endVoiceCall();
+                           });
+
+                           retellInitialized = true;
+                           elements.voiceStatus.textContent = 'Click to start voice chat with Retell AI';
+                           console.log('Retell client initialized successfully');
+
+                       } else {
+                           console.error('Retell SDK not loaded after waiting');
+                           elements.voiceStatus.textContent = 'Voice SDK unavailable';
+                           addVoiceMessage('system', 'Voice SDK failed to load. Please refresh the page.');
+                       }
+                   } catch (error) {
+                       console.error('Failed to initialize Retell:', error);
+                       elements.voiceStatus.textContent = 'Voice initialization failed';
+                   }
+               }
+
+               function handleTranscriptUpdate(transcript) {
+                   console.log('Transcript:', transcript);
+               }
+
+               // Event listeners
+               elements.button.addEventListener('click', toggleChat);
+               elements.closeButton.addEventListener('click', closeChat);
+               elements.sendButton.addEventListener('click', sendTextMessage);
+               elements.input.addEventListener('keypress', (e) => {
+                   if (e.key === 'Enter') {
+                       e.preventDefault();
+                       sendTextMessage();
+                   }
+               });
+
+               elements.modeButtons.forEach(button => {
+                   button.addEventListener('click', () => switchMode(button.dataset.mode));
+               });
+
+               elements.voiceButton.addEventListener('click', toggleVoiceCall);
+
+               // Functions
+               function toggleChat() {
+                   if (isOpen) {
+                       closeChat();
+                   } else {
+                       openChat();
+                   }
+               }
+
+               function openChat() {
+                   elements.panel.classList.add('open');
+                   elements.panel.style.display = 'flex';
+                   isOpen = true;
+                   setTimeout(() => elements.input.focus(), 300);
+               }
+
+               function closeChat() {
+                   elements.panel.classList.remove('open');
+                   elements.panel.style.display = 'none';
+                   isOpen = false;
+
+                   if (isVoiceActive) {
+                       endVoiceCall();
+                   }
+               }
+
+               function switchMode(mode) {
+                   currentMode = mode;
+
+                   elements.modeButtons.forEach(button => {
+                       button.classList.toggle('active', button.dataset.mode === mode);
+                   });
+
+                   elements.panel.className = elements.panel.className.replace(/hybrid-(text|voice)-mode/, '');
+                   elements.panel.classList.add(`hybrid-${mode}-mode`);
+
+                   if (mode === 'text') {
+                       setTimeout(() => elements.input.focus(), 100);
+                       if (isVoiceActive) {
+                           endVoiceCall();
+                       }
+                   }
+               }
+
+               // VAPI Text Chat Functions
+               async function sendTextMessage() {
+                   const message = elements.input.value.trim();
+                   if (!message) return;
+
+                   elements.sendButton.disabled = true;
+                   elements.sendButton.textContent = 'Sending...';
+
+                   addTextMessage('user', message);
+                   elements.input.value = '';
+
+                   const typingIndicator = addTypingIndicator();
+
+                   try {
+                       const response = await fetch(CONFIG.vapi.apiUrl, {
+                           method: 'POST',
+                           headers: {
+                               'Content-Type': 'application/json',
+                               'Authorization': `Bearer ${CONFIG.vapi.apiKey}`
+                           },
+                           body: JSON.stringify({
+                               assistantId: CONFIG.vapi.assistantId,
+                               input: message,
+                               previousChatId: previousVAPIChatId
+                           })
+                       });
+
+                       typingIndicator.remove();
+
+                       if (!response.ok) {
+                           addTextMessage('system', `Sorry, I encountered an error (${response.status}). Please try again.`);
+                           return;
+                       }
+
+                       const data = await response.json();
+
+                       if (data.id) {
+                           previousVAPIChatId = data.id;
+                       }
+
+                       const assistantMessage = extractVAPIMessage(data);
+                       addTextMessage('assistant', assistantMessage);
+
+                   } catch (error) {
+                       console.error('VAPI text chat error:', error);
+                       typingIndicator.remove();
+                       addTextMessage('system', 'Connection error. Please try again.');
+                   } finally {
+                       elements.sendButton.disabled = false;
+                       elements.sendButton.textContent = 'Send';
+                       elements.input.focus();
+                   }
+               }
+
+               function extractVAPIMessage(data) {
+                   if (data.output && Array.isArray(data.output) && data.output.length > 0) {
+                       const lastOutput = data.output[data.output.length - 1];
+                       if (lastOutput.content) return lastOutput.content;
+                       if (lastOutput.text) return lastOutput.text;
+                       if (lastOutput.message) return lastOutput.message;
+                   }
+
+                   if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
+                       const lastMessage = data.messages[data.messages.length - 1];
+                       if (lastMessage.content) return lastMessage.content;
+                       if (lastMessage.text) return lastMessage.text;
+                       if (lastMessage.message) return lastMessage.message;
+                   }
+
+                   if (data.response) return data.response;
+                   if (data.reply) return data.reply;
+                   if (data.text) return data.text;
+                   if (data.content) return data.content;
+
+                   return 'I received your message but had trouble with the response format. Please try again.';
+               }
+
+               // Retell Voice Chat Functions
+               async function toggleVoiceCall() {
+                   if (!retellInitialized || !retellClient) {
+                       addVoiceMessage('system', 'Voice system is not ready yet. Please try again in a moment.');
+                       return;
+                   }
+
+                   if (isVoiceActive) {
+                       endVoiceCall();
+                   } else {
+                       startVoiceCall();
+                   }
+               }
+
+               async function startVoiceCall() {
+                   if (isConnecting) return;
+
+                   try {
+                       isConnecting = true;
+                       console.log('Starting Retell voice call...');
+                       elements.voiceButton.className = 'connecting';
+                       elements.voiceButton.textContent = 'Connecting...';
+                       elements.voiceStatus.textContent = 'Connecting to Retell AI...';
+
+                       // For demo - show that voice feature needs backend setup
+                       addVoiceMessage('system', 'Voice chat requires backend setup for Retell access tokens. Please configure your server endpoint.');
+
+                       // Reset button state
+                       elements.voiceButton.className = '';
+                       elements.voiceButton.textContent = 'Start Call';
+                       elements.voiceStatus.textContent = 'Voice chat requires server setup';
+
+                   } catch (error) {
+                       console.error('Failed to start Retell call:', error);
+                       addVoiceMessage('system', 'Failed to start voice call: ' + error.message);
+                       elements.voiceButton.className = '';
+                       elements.voiceButton.textContent = 'Start Call';
+                       elements.voiceStatus.textContent = 'Click to start voice chat with Retell AI';
+                   } finally {
+                       isConnecting = false;
+                   }
+               }
+
+               function endVoiceCall() {
+                   try {
+                       isVoiceActive = false;
+                       elements.voiceButton.className = '';
+                       elements.voiceButton.textContent = 'Start Call';
+                       elements.voiceStatus.textContent = 'Click to start voice chat with Retell AI';
+
+                       if (retellClient) {
+                           retellClient.stopCall();
+                       }
+
+                       console.log('Retell voice call ended');
+                   } catch (error) {
+                       console.error('Error ending Retell call:', error);
+                   }
+               }
+
+               // Message display functions
+               function addTextMessage(role, text) {
+                   const messageDiv = document.createElement('div');
+                   messageDiv.className = `hybrid-message hybrid-message-${role}`;
+                   messageDiv.textContent = text;
+                   elements.textMessages.appendChild(messageDiv);
+                   scrollToBottom(elements.textMessages);
+                   return messageDiv;
+               }
+
+               function addVoiceMessage(role, text) {
+                   const messageDiv = document.createElement('div');
+                   messageDiv.className = `hybrid-voice-message hybrid-voice-message-${role}`;
+                   messageDiv.textContent = text;
+                   elements.voiceMessages.appendChild(messageDiv);
+                   scrollToBottom(elements.voiceMessages);
+                   return messageDiv;
+               }
+
+               function addTypingIndicator() {
+                   const typingDiv = document.createElement('div');
+                   typingDiv.className = 'hybrid-message hybrid-message-system';
+                   typingDiv.innerHTML = `
+                       <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                           <span style="animation: fade 1.4s ease-in-out infinite; animation-delay: 0s;">•</span>
+                           <span style="animation: fade 1.4s ease-in-out infinite; animation-delay: 0.2s;">•</span>
+                           <span style="animation: fade 1.4s ease-in-out infinite; animation-delay: 0.4s;">•</span>
+                           <span style="margin-left: 8px;">Sophie is typing...</span>
+                       </div>
+                       <style>
+                           @keyframes fade {
+                               0%, 80%, 100% { opacity: 0.3; }
+                               40% { opacity: 1; }
+                           }
+                       </style>
+                   `;
+                   elements.textMessages.appendChild(typingDiv);
+                   scrollToBottom(elements.textMessages);
+                   return typingDiv;
+               }
+
+               function scrollToBottom(container) {
+                   container.scrollTop = container.scrollHeight;
+               }
+           });
+       </script>
+
+     </body>
+     </html>
+  ⎿  <!DOCTYPE html>                                                                                                                                               
+     <html lang="en">
+     <head>
+       <meta charset="UTF-8" />
+       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+       <title>Talk to Sophie | Cold Lava</title>
+       <style>
+         body {
+           margin: 0;
+           font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+           background: linear-gradient(to bottom, #00c7d2 0%, #0a0908 80%);
+           color: #ffffff;
+           display: flex;
+           flex-direction: column;
+           align-items: center;
+           justify-content: flex-start;
+           min-height: 100vh;
+           padding-top: 40px;
+         }
+
+         .logo {
+           width: 160px;
+           margin-bottom: 20px;
+         }
+
+         .sophie-image {
+           width: 220px;
+           border-radius: 20px;
+           box-shadow: 0 0 20px rgba(20, 184, 166, 0.4);
+           margin-bottom: 20px;
+         }
+
+         .text {
+           font-size: 1.2rem;
+           text-align: center;
+           max-width: 600px;
+           margin-bottom: 20px;
+         }
+
+         /* VAPI + Retell Hybrid Widget CSS - Fully Isolated */
+         :root {
+           --hybrid-primary-color: #d52329;
+           --hybrid-accent-color: #ffffff;
+           --retell-voice-color: #00c7d2;
+         }
+
+         #hybrid-widget {
+           position: fixed !important;
+           bottom: 20px !important;
+           right: 20px !important;
+           z-index: 10000 !important;
+           font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+           font-size: 14px !important;
+           line-height: 1.4 !important;
+           box-sizing: border-box !important;
+         }
+
+         #hybrid-widget *,
+         #hybrid-widget *::before,
+         #hybrid-widget *::after {
+           box-sizing: border-box !important;
+         }
+
+         #hybrid-chat-button {
+           width: 60px !important;
+           height: 60px !important;
+           border-radius: 50% !important;
+           background: var(--hybrid-primary-color) !important;
+           border: none !important;
+           color: var(--hybrid-accent-color) !important;
+           font-size: 24px !important;
+           cursor: pointer !important;
+           box-shadow: 0 4px 12px rgba(213, 35, 41, 0.3) !important;
+           transition: all 0.3s ease !important;
+           display: flex !important;
+           align-items: center !important;
+           justify-content: center !important;
+           outline: none !important;
+           user-select: none !important;
+         }
+
+         #hybrid-chat-button:hover {
+           transform: scale(1.05) !important;
+           box-shadow: 0 6px 20px rgba(213, 35, 41, 0.4) !important;
+         }
+
+         #hybrid-chat-panel {
+           position: absolute !important;
+           bottom: 70px !important;
+           right: 0 !important;
+           width: 350px !important;
+           height: 500px !important;
+           background: #000000 !important;
+           border-radius: 12px !important;
+           box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+           border: 1px solid #333333 !important;
+           display: none !important;
+           flex-direction: column !important;
+           overflow: hidden !important;
+           font-family: inherit !important;
+         }
+
+         #hybrid-chat-panel.open {
+           display: flex !important;
+           animation: slideUp 0.3s ease-out !important;
+         }
+
+         @keyframes slideUp {
+           from { opacity: 0; transform: translateY(20px); }
+           to { opacity: 1; transform: translateY(0); }
+         }
+
+         #hybrid-chat-header {
+           background: var(--hybrid-primary-color) !important;
+           color: var(--hybrid-accent-color) !important;
+           padding: 16px !important;
+           display: flex !important;
+           justify-content: space-between !important;
+           align-items: center !important;
+           border-radius: 12px 12px 0 0 !important;
+         }
+
+         #hybrid-chat-title {
+           font-weight: 600 !important;
+           font-size: 16px !important;
+           margin: 0 !important;
+         }
+
+         #hybrid-close-button {
+           background: none !important;
+           border: none !important;
+           color: var(--hybrid-accent-color) !important;
+           font-size: 20px !important;
+           cursor: pointer !important;
+           padding: 4px !important;
+           border-radius: 4px !important;
+           transition: background 0.2s ease !important;
+         }
+
+         #hybrid-close-button:hover {
+           background: rgba(255, 255, 255, 0.1) !important;
+         }
+
+         /* Separate Message Containers */
+         #hybrid-text-messages, #hybrid-voice-messages {
+           flex: 1 !important;
+           padding: 16px !important;
+           overflow-y: auto !important;
+           background: #111111 !important;
+           scrollbar-width: thin !important;
+           display: none !important;
+         }
+
+         /* Show appropriate message container based on mode */
+         .hybrid-text-mode #hybrid-text-messages { display: block !important; }
+         .hybrid-voice-mode #hybrid-voice-messages { display: block !important; }
+
+         .hybrid-message {
+           padding: 12px !important;
+           border-radius: 8px !important;
+           margin-bottom: 12px !important;
+           max-width: 90% !important;
+           word-wrap: break-word !important;
+           font-size: 14px !important;
+           line-height: 1.4 !important;
+         }
+
+         .hybrid-message-user {
+           background: var(--hybrid-primary-color) !important;
+           color: var(--hybrid-accent-color) !important;
+           margin-left: 40px !important;
+           border-radius: 18px 18px 4px 18px !important;
+         }
+
+         .hybrid-message-assistant {
+           background: #222222 !important;
+           color: #ffffff !important;
+           border-left: 3px solid var(--hybrid-primary-color) !important;
+           border-radius: 18px 18px 18px 4px !important;
+         }
+
+         .hybrid-message-system {
+           background: #333333 !important;
+           color: #cccccc !important;
+           font-style: italic !important;
+           font-size: 12px !important;
+           text-align: center !important;
+           border-radius: 12px !important;
+         }
+
+         /* Voice message styling - Retell branded */
+         .hybrid-voice-message {
+           padding: 12px !important;
+           border-radius: 8px !important;
+           margin-bottom: 8px !important;
+           max-width: 95% !important;
+           word-wrap: break-word !important;
+           font-size: 14px !important;
+           line-height: 1.4 !important;
+         }
+
+         .hybrid-voice-message-user {
+           background: linear-gradient(135deg, var(--retell-voice-color), #008c94) !important;
+           color: white !important;
+           margin-left: 20px !important;
+           border-radius: 15px 15px 5px 15px !important;
+           border: 1px solid rgba(0, 199, 210, 0.3) !important;
+         }
+
+         .hybrid-voice-message-assistant {
+           background: linear-gradient(135deg, #222222, #333333) !important;
+           color: #ffffff !important;
+           border: 1px solid var(--retell-voice-color) !important;
+           border-left: 4px solid var(--retell-voice-color) !important;
+           border-radius: 15px 15px 15px 5px !important;
+           box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
+         }
+
+         .hybrid-voice-message-system {
+           background: linear-gradient(135deg, #1a1a1a, #2a2a2a) !important;
+           color: var(--retell-voice-color) !important;
+           font-style: italic !important;
+           font-size: 12px !important;
+           text-align: center !important;
+           border-radius: 20px !important;
+           border: 1px solid rgba(0, 199, 210, 0.3) !important;
+         }
+
+         #hybrid-input-area {
+           padding: 16px !important;
+           border-top: 1px solid #333333 !important;
+           background: #000000 !important;
+           border-radius: 0 0 12px 12px !important;
+         }
+
+         #hybrid-mode-toggle {
+           display: flex !important;
+           background: #333333 !important;
+           border-radius: 8px !important;
+           padding: 4px !important;
+           margin-bottom: 12px !important;
+         }
+
+         .hybrid-mode-button {
+           flex: 1 !important;
+           padding: 8px 12px !important;
+           border: none !important;
+           background: transparent !important;
+           border-radius: 4px !important;
+           font-size: 13px !important;
+           font-weight: 500 !important;
+           cursor: pointer !important;
+           transition: all 0.2s ease !important;
+           color: #cccccc !important;
+           outline: none !important;
+         }
+
+         .hybrid-mode-button.active {
+           background: #000000 !important;
+           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+         }
+
+         .hybrid-mode-button.active[data-mode="text"] {
+           color: var(--hybrid-primary-color) !important;
+         }
+
+         .hybrid-mode-button.active[data-mode="voice"] {
+           color: var(--retell-voice-color) !important;
+         }
+
+         .hybrid-mode-button:hover:not(.active) {
+           color: #ffffff !important;
+         }
+
+         #hybrid-text-input-container {
+           display: flex !important;
+           gap: 8px !important;
+         }
+
+         #hybrid-message-input {
+           flex: 1 !important;
+           padding: 8px 12px !important;
+           border: 1px solid #444444 !important;
+           border-radius: 6px !important;
+           outline: none !important;
+           font-size: 14px !important;
+           font-family: inherit !important;
+           transition: border-color 0.2s ease !important;
+           color: #ffffff !important;
+           background: #222222 !important;
+         }
+
+         #hybrid-message-input:focus {
+           border-color: var(--hybrid-primary-color) !important;
+           box-shadow: 0 0 0 1px var(--hybrid-primary-color) !important;
+         }
+
+         #hybrid-send-button {
+           background: var(--hybrid-primary-color) !important;
+           color: var(--hybrid-accent-color) !important;
+           border: none !important;
+           padding: 8px 16px !important;
+           border-radius: 6px !important;
+           cursor: pointer !important;
+           font-weight: 500 !important;
+           font-size: 14px !important;
+           transition: all 0.2s ease !important;
+           outline: none !important;
+         }
+
+         #hybrid-send-button:hover {
+           filter: brightness(1.1) !important;
+         }
+
+         #hybrid-send-button:disabled {
+           opacity: 0.6 !important;
+           cursor: not-allowed !important;
+         }
+
+         #hybrid-voice-controls {
+           display: none !important;
+           flex-direction: column !important;
+           align-items: center !important;
+           gap: 12px !important;
+         }
+
+         /* Retell Voice Button Styles */
+         #hybrid-voice-button {
+           width: 140px !important;
+           height: 45px !important;
+           border-radius: 25px !important;
+           border: 2px solid var(--retell-voice-color) !important;
+           cursor: pointer !important;
+           font-size: 14px !important;
+           font-weight: 600 !important;
+           transition: all 0.3s ease !important;
+           outline: none !important;
+           background: var(--retell-voice-color) !important;
+           color: white !important;
+           box-shadow: 0 4px 15px rgba(0, 199, 210, 0.2) !important;
+           text-transform: uppercase !important;
+           letter-spacing: 0.5px !important;
+         }
+
+         #hybrid-voice-button:hover {
+           transform: translateY(-2px) !important;
+           box-shadow: 0 6px 25px rgba(0, 199, 210, 0.3) !important;
+         }
+
+         /* Voice Button States for Retell */
+         #hybrid-voice-button.connecting {
+           background: linear-gradient(45deg, #f97316, #ea580c) !important;
+           color: white !important;
+           border-color: #f97316 !important;
+           animation: retellConnecting 1.5s ease-in-out infinite !important;
+         }
+
+         #hybrid-voice-button.active {
+           background: linear-gradient(45deg, #dc2626, #b91c1c) !important;
+           color: white !important;
+           border-color: #dc2626 !important;
+           animation: retellActive 2s ease-in-out infinite !important;
+         }
+
+         /* Retell Voice Button Animations */
+         @keyframes retellConnecting {
+           0%, 100% {
+             box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4), 0 0 0 0 rgba(249, 115, 22, 0.7);
+           }
+           50% {
+             box-shadow: 0 6px 25px rgba(249, 115, 22, 0.6), 0 0 0 10px rgba(249, 115, 22, 0);
+           }
+         }
+
+         @keyframes retellActive {
+           0%, 100% {
+             box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4), 0 0 0 0 rgba(220, 38, 38, 0.7);
+           }
+           50% {
+             box-shadow: 0 6px 25px rgba(220, 38, 38, 0.6), 0 0 0 8px rgba(220, 38, 38, 0);
+           }
+         }
+
+         #hybrid-voice-status {
+           font-size: 13px !important;
+           color: #cccccc !important;
+           text-align: center !important;
+           min-height: 18px !important;
+         }
+
+         /* Mode switching */
+         .hybrid-text-mode #hybrid-text-input-container { display: flex !important; }
+         .hybrid-text-mode #hybrid-voice-controls { display: none !important; }
+         .hybrid-voice-mode #hybrid-text-input-container { display: none !important; }
+         .hybrid-voice-mode #hybrid-voice-controls { display: flex !important; }
+
+         /* Mobile responsive */
+         @media (max-width: 480px) {
+           #hybrid-widget {
+             bottom: 10px !important;
+             right: 10px !important;
+           }
+
+           #hybrid-chat-panel {
+             width: calc(100vw - 20px) !important;
+             max-width: 350px !important;
+             height: 80vh !important;
+             max-height: 500px !important;
+           }
+         }
+       </style>
+     </head>
+     <body>
+
+       <img src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/LAVA_1.png?v=1753207208" alt="Cold Lava Logo" class="logo" />
+
+       <img src="https://cdn.shopify.com/s/files/1/0951/6141/8067/files/f63e1b45-8157-4920-ab3f-2833797fb6b9.png?v=1753867612" alt="Sophie" class="sophie-image" />
+
+       <!-- VAPI Text + Retell Voice Hybrid Widget -->
+       <div id="hybrid-widget">
+           <!-- Chat Button -->
+           <button id="hybrid-chat-button" aria-label="Open chat">💬</button>
+
+           <!-- Chat Panel -->
+           <div id="hybrid-chat-panel" role="dialog" aria-labelledby="hybrid-chat-title" class="hybrid-text-mode">
+               <!-- Header -->
+               <div id="hybrid-chat-header">
+                   <h3 id="hybrid-chat-title">Talk to Sophie</h3>
+                   <button id="hybrid-close-button" aria-label="Close chat">×</button>
+               </div>
+
+               <!-- Messages - Separate containers for text and voice -->
+               <div id="hybrid-text-messages" role="log" aria-live="polite" aria-label="Text chat messages">
+                   <div class="hybrid-message hybrid-message-assistant">
+                       Hey! I'm Sophie from Cold Lava. You can chat with me via text or voice. How can I help you today?
+                   </div>
+               </div>
+
+               <div id="hybrid-voice-messages" role="log" aria-live="polite" aria-label="Voice chat messages">
+                   <div class="hybrid-voice-message hybrid-voice-message-system">
+                       🎙️ Voice chat powered by Retell AI - Click "Start Call" to begin
+                   </div>
+               </div>
+
+               <!-- Input Area -->
+               <div id="hybrid-input-area">
+                   <!-- Mode Toggle -->
+                   <div id="hybrid-mode-toggle">
+                       <button class="hybrid-mode-button active" data-mode="text">💬 Text Chat</button>
+                       <button class="hybrid-mode-button" data-mode="voice">🎙️ Voice Chat</button>
+                   </div>
+
+                   <!-- Text Chat Input -->
+                   <div id="hybrid-text-input-container">
+                       <input 
+                           id="hybrid-message-input" 
+                           type="text" 
+                           placeholder="Type your message..."
+                           aria-label="Message input"
+                           autocomplete="off"
+                       >
+                       <button id="hybrid-send-button" aria-label="Send message">Send</button>
+                   </div>
+
+                   <!-- Voice Chat Controls -->
+                   <div id="hybrid-voice-controls">
+                       <button id="hybrid-voice-button" aria-label="Start voice chat">Start Call</button>
+                       <div id="hybrid-voice-status">Click to start voice chat with Retell AI</div>
+                   </div>
+               </div>
+           </div>
+       </div>
+
+       <!-- Include Retell JS SDK -->
+       <script src="https://cdn.jsdelivr.net/npm/retell-client-js-sdk@2.0.7/dist/retell-client-js-sdk.min.js"></script>
+
+       <!-- Hybrid Widget JavaScript -->
+       <script>
+           // Wait for Retell SDK to load
+           function waitForRetellSDK() {
+               return new Promise((resolve) => {
+                   if (window.RetellWebClient) {
+                       resolve();
+                       return;
+                   }
+
+                   const checkSDK = setInterval(() => {
+                       if (window.RetellWebClient) {
+                           clearInterval(checkSDK);
+                           resolve();
+                       }
+                   }, 100);
+
+                   // Timeout after 10 seconds
+                   setTimeout(() => {
+                       clearInterval(checkSDK);
+                       resolve();
+                   }, 10000);
+               });
+           }
+
+           document.addEventListener('DOMContentLoaded', async function() {
+               // Wait for Retell SDK to load
+               await waitForRetellSDK();
+               // Widget state
+               let previousVAPIChatId = null;
+               let isOpen = false;
+               let currentMode = 'text';
+               let retellClient = null;
+               let isVoiceActive = false;
+               let retellInitialized = false;
+               let isConnecting = false;
+
+               // Configuration with your specific agent IDs
+               const CONFIG = {
+                   vapi: {
+                       apiKey: 'a025d33b-8e6a-45ee-bda4-ec22db21e1b6',
+                       assistantId: 'c86d0583-5a3a-4085-8976-28bff7f0e71b',
+                       apiUrl: 'https://api.vapi.ai/chat'
+                   },
+                   retell: {
+                       agentId: 'agent_6b974ba4769d7b7b8df27d05d0'
+                   }
+               };
+
+               // Elements
+               const elements = {
+                   button: document.getElementById('hybrid-chat-button'),
+                   panel: document.getElementById('hybrid-chat-panel'),
+                   closeButton: document.getElementById('hybrid-close-button'),
+                   textMessages: document.getElementById('hybrid-text-messages'),
+                   voiceMessages: document.getElementById('hybrid-voice-messages'),
+                   input: document.getElementById('hybrid-message-input'),
+                   sendButton: document.getElementById('hybrid-send-button'),
+                   modeButtons: document.querySelectorAll('.hybrid-mode-button'),
+                   voiceButton: document.getElementById('hybrid-voice-button'),
+                   voiceStatus: document.getElementById('hybrid-voice-status')
+               };
+
+               // Initialize Retell client
+               setTimeout(() => {
+                   initializeRetell();
+               }, 1000);
+
+               function initializeRetell() {
+                   try {
+                       if (window.RetellWebClient) {
+                           console.log('Initializing Retell client...');
+                           retellClient = new window.RetellWebClient();
+
+                           // Set up Retell event listeners
+                           retellClient.on('call_started', () => {
+                               console.log('Retell call started');
+                               isVoiceActive = true;
+                               elements.voiceButton.className = 'active';
+                               elements.voiceButton.textContent = 'End Call';
+                               elements.voiceStatus.textContent = 'Connected - speak now!';
+                               addVoiceMessage('system', '🎙️ Voice call connected via Retell AI');
+                           });
+
+                           retellClient.on('call_ended', () => {
+                               console.log('Retell call ended');
+                               endVoiceCall();
+                           });
+
+                           retellClient.on('agent_start_talking', () => {
+                               console.log('Agent started talking');
+                               elements.voiceStatus.textContent = 'Sophie is speaking...';
+                           });
+
+                           retellClient.on('agent_stop_talking', () => {
+                               console.log('Agent stopped talking');
+                               elements.voiceStatus.textContent = 'Your turn - speak now';
+                           });
+
+                           retellClient.on('update', (update) => {
+                               console.log('Transcript update:', update);
+                               if (update.transcript) {
+                                   handleTranscriptUpdate(update.transcript);
+                               }
+                           });
+
+                           retellClient.on('error', (error) => {
+                               console.error('Retell error:', error);
+                               addVoiceMessage('system', `Voice error: ${error.message || 'Connection failed'}`);
+                               endVoiceCall();
+                           });
+
+                           retellInitialized = true;
+                           elements.voiceStatus.textContent = 'Click to start voice chat with Retell AI';
+                           console.log('Retell client initialized successfully');
+
+                       } else {
+                           console.error('Retell SDK not loaded after waiting');
+                           elements.voiceStatus.textContent = 'Voice SDK unavailable';
+                           addVoiceMessage('system', 'Voice SDK failed to load. Please refresh the page.');
+                       }
+                   } catch (error) {
+                       console.error('Failed to initialize Retell:', error);
+                       elements.voiceStatus.textContent = 'Voice initialization failed';
+                   }
+               }
+
+               function handleTranscriptUpdate(transcript) {
+                   console.log('Transcript:', transcript);
+               }
+
+               // Event listeners
+               elements.button.addEventListener('click', toggleChat);
+               elements.closeButton.addEventListener('click', closeChat);
+               elements.sendButton.addEventListener('click', sendTextMessage);
+               elements.input.addEventListener('keypress', (e) => {
+                   if (e.key === 'Enter') {
+                       e.preventDefault();
+                       sendTextMessage();
+                   }
+               });
+
+               elements.modeButtons.forEach(button => {
+                   button.addEventListener('click', () => switchMode(button.dataset.mode));
+               });
+
+               elements.voiceButton.addEventListener('click', toggleVoiceCall);
+
+               // Functions
+               function toggleChat() {
+                   if (isOpen) {
+                       closeChat();
+                   } else {
+                       openChat();
+                   }
+               }
+
+               function openChat() {
+                   elements.panel.classList.add('open');
+                   elements.panel.style.display = 'flex';
+                   isOpen = true;
+                   setTimeout(() => elements.input.focus(), 300);
+               }
+
+               function closeChat() {
+                   elements.panel.classList.remove('open');
+                   elements.panel.style.display = 'none';
+                   isOpen = false;
+
+                   if (isVoiceActive) {
+                       endVoiceCall();
+                   }
+               }
+
+               function switchMode(mode) {
+                   currentMode = mode;
+
+                   elements.modeButtons.forEach(button => {
+                       button.classList.toggle('active', button.dataset.mode === mode);
+                   });
+
+                   elements.panel.className = elements.panel.className.replace(/hybrid-(text|voice)-mode/, '');
+                   elements.panel.classList.add(`hybrid-${mode}-mode`);
+
+                   if (mode === 'text') {
+                       setTimeout(() => elements.input.focus(), 100);
+                       if (isVoiceActive) {
+                           endVoiceCall();
+                       }
+                   }
+               }
+
+               // VAPI Text Chat Functions
+               async function sendTextMessage() {
+                   const message = elements.input.value.trim();
+                   if (!message) return;
+
+                   elements.sendButton.disabled = true;
+                   elements.sendButton.textContent = 'Sending...';
+
+                   addTextMessage('user', message);
+                   elements.input.value = '';
+
+                   const typingIndicator = addTypingIndicator();
+
+                   try {
+                       const response = await fetch(CONFIG.vapi.apiUrl, {
+                           method: 'POST',
+                           headers: {
+                               'Content-Type': 'application/json',
+                               'Authorization': `Bearer ${CONFIG.vapi.apiKey}`
+                           },
+                           body: JSON.stringify({
+                               assistantId: CONFIG.vapi.assistantId,
+                               input: message,
+                               previousChatId: previousVAPIChatId
+                           })
+                       });
+
+                       typingIndicator.remove();
+
+                       if (!response.ok) {
+                           addTextMessage('system', `Sorry, I encountered an error (${response.status}). Please try again.`);
+                           return;
+                       }
+
+                       const data = await response.json();
+
+                       if (data.id) {
+                           previousVAPIChatId = data.id;
+                       }
+
+                       const assistantMessage = extractVAPIMessage(data);
+                       addTextMessage('assistant', assistantMessage);
+
+                   } catch (error) {
+                       console.error('VAPI text chat error:', error);
+                       typingIndicator.remove();
+                       addTextMessage('system', 'Connection error. Please try again.');
+                   } finally {
+                       elements.sendButton.disabled = false;
+                       elements.sendButton.textContent = 'Send';
+                       elements.input.focus();
+                   }
+               }
+
+               function extractVAPIMessage(data) {
+                   if (data.output && Array.isArray(data.output) && data.output.length > 0) {
+                       const lastOutput = data.output[data.output.length - 1];
+                       if (lastOutput.content) return lastOutput.content;
+                       if (lastOutput.text) return lastOutput.text;
+                       if (lastOutput.message) return lastOutput.message;
+                   }
+
+                   if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
+                       const lastMessage = data.messages[data.messages.length - 1];
+                       if (lastMessage.content) return lastMessage.content;
+                       if (lastMessage.text) return lastMessage.text;
+                       if (lastMessage.message) return lastMessage.message;
+                   }
+
+                   if (data.response) return data.response;
+                   if (data.reply) return data.reply;
+                   if (data.text) return data.text;
+                   if (data.content) return data.content;
+
+                   return 'I received your message but had trouble with the response format. Please try again.';
+               }
+
+               // Retell Voice Chat Functions
+               async function toggleVoiceCall() {
+                   if (!retellInitialized || !retellClient) {
+                       addVoiceMessage('system', 'Voice system is not ready yet. Please try again in a moment.');
+                       return;
+                   }
+
+                   if (isVoiceActive) {
+                       endVoiceCall();
+                   } else {
+                       startVoiceCall();
+                   }
+               }
+
+               async function startVoiceCall() {
+                   if (isConnecting) return;
+
+                   try {
+                       isConnecting = true;
+                       console.log('Starting Retell voice call...');
+                       elements.voiceButton.className = 'connecting';
+                       elements.voiceButton.textContent = 'Connecting...';
+                       elements.voiceStatus.textContent = 'Connecting to Retell AI...';
+
+                       // For demo - show that voice feature needs backend setup
+                       addVoiceMessage('system', 'Voice chat requires backend setup for Retell access tokens. Please configure your server endpoint.');
+
+                       // Reset button state
+                       elements.voiceButton.className = '';
+                       elements.voiceButton.textContent = 'Start Call';
+                       elements.voiceStatus.textContent = 'Voice chat requires server setup';
+
+                   } catch (error) {
+                       console.error('Failed to start Retell call:', error);
+                       addVoiceMessage('system', 'Failed to start voice call: ' + error.message);
+                       elements.voiceButton.className = '';
+                       elements.voiceButton.textContent = 'Start Call';
+                       elements.voiceStatus.textContent = 'Click to start voice chat with Retell AI';
+                   } finally {
+                       isConnecting = false;
+                   }
+               }
+
+               function endVoiceCall() {
+                   try {
+                       isVoiceActive = false;
+                       elements.voiceButton.className = '';
+                       elements.voiceButton.textContent = 'Start Call';
+                       elements.voiceStatus.textContent = 'Click to start voice chat with Retell AI';
+
+                       if (retellClient) {
+                           retellClient.stopCall();
+                       }
+
+                       console.log('Retell voice call ended');
+                   } catch (error) {
+                       console.error('Error ending Retell call:', error);
+                   }
+               }
+
+               // Message display functions
+               function addTextMessage(role, text) {
+                   const messageDiv = document.createElement('div');
+                   messageDiv.className = `hybrid-message hybrid-message-${role}`;
+                   messageDiv.textContent = text;
+                   elements.textMessages.appendChild(messageDiv);
+                   scrollToBottom(elements.textMessages);
+                   return messageDiv;
+               }
+
+               function addVoiceMessage(role, text) {
+                   const messageDiv = document.createElement('div');
+                   messageDiv.className = `hybrid-voice-message hybrid-voice-message-${role}`;
+                   messageDiv.textContent = text;
+                   elements.voiceMessages.appendChild(messageDiv);
+                   scrollToBottom(elements.voiceMessages);
+                   return messageDiv;
+               }
+
+               function addTypingIndicator() {
+                   const typingDiv = document.createElement('div');
+                   typingDiv.className = 'hybrid-message hybrid-message-system';
+                   typingDiv.innerHTML = `
+                       <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                           <span style="animation: fade 1.4s ease-in-out infinite; animation-delay: 0s;">•</span>
+                           <span style="animation: fade 1.4s ease-in-out infinite; animation-delay: 0.2s;">•</span>
+                           <span style="animation: fade 1.4s ease-in-out infinite; animation-delay: 0.4s;">•</span>
+                           <span style="margin-left: 8px;">Sophie is typing...</span>
+                       </div>
+                       <style>
+                           @keyframes fade {
+                               0%, 80%, 100% { opacity: 0.3; }
+                               40% { opacity: 1; }
+                           }
+                       </style>
+                   `;
+                   elements.textMessages.appendChild(typingDiv);
+                   scrollToBottom(elements.textMessages);
+                   return typingDiv;
+               }
+
+               function scrollToBottom(container) {
+                   container.scrollTop = container.scrollHeight;
+               }
+           });
+       </script>
+
+     </body>
+     </html>
