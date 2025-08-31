@@ -425,20 +425,20 @@
         <div id="hybrid-chat-panel" role="dialog" aria-labelledby="hybrid-chat-title" class="hybrid-text-mode">
             <!-- Header -->
             <div id="hybrid-chat-header">
-                <h3 id="hybrid-chat-title">Talk to Sophie</h3>
+                <h3 id="hybrid-chat-title">Talk to Rosie</h3>
                 <button id="hybrid-close-button" aria-label="Close chat">×</button>
             </div>
 
             <!-- Messages - Separate containers for text and voice -->
             <div id="hybrid-text-messages" role="log" aria-live="polite" aria-label="Text chat messages">
                 <div class="hybrid-message hybrid-message-assistant">
-                    Hey! I'm Sophie from Cold Lava. You can chat with me via text or voice. How can I help you today?
+                  Welcome to Detail Dynamics, Rosie here.. how can I help??
                 </div>
             </div>
 
             <div id="hybrid-voice-messages" role="log" aria-live="polite" aria-label="Voice chat messages">
                 <div class="hybrid-voice-message hybrid-voice-message-system">
-                    🎙️ Voice chat powered by Retell AI - Click "Start Call" to begin
+                    🎙️ Click "Start Call" to begin
                 </div>
             </div>
 
@@ -465,7 +465,7 @@
                 <!-- Voice Chat Controls -->
                 <div id="hybrid-voice-controls">
                     <button id="hybrid-voice-button" aria-label="Start voice chat">Start Call</button>
-                    <div id="hybrid-voice-status">Click to start voice chat with Retell AI</div>
+                    <div id="hybrid-voice-status">Click to start voice chat with Rosie</div>
                 </div>
             </div>
         </div>
@@ -561,7 +561,7 @@
                             elements.voiceButton.className = 'active';
                             elements.voiceButton.textContent = 'End Call';
                             elements.voiceStatus.textContent = 'Connected - speak now!';
-                            addVoiceMessage('system', '🎙️ Voice call connected via Retell AI');
+                            addVoiceMessage('system', '🎙️ Voice call connected to Rosie');
                         });
 
                         retellClient.on('call_ended', () => {
@@ -571,7 +571,7 @@
 
                         retellClient.on('agent_start_talking', () => {
                             console.log('Agent started talking');
-                            elements.voiceStatus.textContent = 'Sophie is speaking...';
+                            elements.voiceStatus.textContent = 'Rosie is speaking...';
                         });
 
                         retellClient.on('agent_stop_talking', () => {
@@ -594,7 +594,7 @@
 
                         retellInitialized = true;
                         elements.voiceStatus.textContent = 'Click to start voice chat with Retell AI';
-                        console.log('Retell client initialized successfully');
+                        console.log('Client initialized successfully');
 
                     } else {
                         console.error('Retell SDK not loaded after waiting');
@@ -815,7 +815,7 @@
 
                     elements.voiceButton.className = '';
                     elements.voiceButton.textContent = 'Start Call';
-                    elements.voiceStatus.textContent = 'Click to start voice chat with Retell AI';
+                    elements.voiceStatus.textContent = 'Click to start voice chat with Rosie';
                 } finally {
                     isConnecting = false;
                 }
@@ -826,15 +826,15 @@
                     isVoiceActive = false;
                     elements.voiceButton.className = '';
                     elements.voiceButton.textContent = 'Start Call';
-                    elements.voiceStatus.textContent = 'Click to start voice chat with Retell AI';
+                    elements.voiceStatus.textContent = 'Click to start voice chat with Rosie';
 
                     if (retellClient) {
                         retellClient.stopCall();
                     }
 
-                    console.log('Retell voice call ended');
+                    console.log('Rosie voice call ended');
                 } catch (error) {
-                    console.error('Error ending Retell call:', error);
+                    console.error('Error ending Rosie call:', error);
                 }
             }
 
