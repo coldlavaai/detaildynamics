@@ -204,9 +204,29 @@
 
       #hybrid-input-area {
         padding: 16px !important;
+        padding-bottom: 8px !important;
         border-top: 1px solid #333333 !important;
         background: #000000 !important;
         border-radius: 0 0 12px 12px !important;
+      }
+
+      #hybrid-branding {
+        text-align: center !important;
+        font-size: 11px !important;
+        color: #666666 !important;
+        margin-top: 8px !important;
+        padding-top: 8px !important;
+        border-top: 1px solid #222222 !important;
+      }
+
+      #hybrid-branding a {
+        color: #00c7d2 !important;
+        text-decoration: none !important;
+        transition: color 0.2s ease !important;
+      }
+
+      #hybrid-branding a:hover {
+        color: #00e5f5 !important;
       }
 
       #hybrid-mode-toggle {
@@ -438,6 +458,11 @@
                 <div id="hybrid-voice-controls">
                     <button id="hybrid-voice-button" aria-label="Start voice chat">Start Call</button>
                     <div id="hybrid-voice-status">Click to start voice chat with Rosie</div>
+                </div>
+
+                <!-- Branding -->
+                <div id="hybrid-branding">
+                    Powered by <a href="https://coldlava.ai" target="_blank">Cold Lava</a>
                 </div>
             </div>
         </div>
