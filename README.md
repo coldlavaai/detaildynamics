@@ -82,14 +82,28 @@ A secure, production-ready chatbot widget featuring both text and voice chat cap
 
 ### Step 4: Embed on Client's Website
 
-Once deployed, the web developer can add this to any page:
+Once deployed, there are **3 ways** to add the chatbot to any website:
 
+#### Option 1: Simple Script Embed (Easiest - Recommended)
+Add this **one line** anywhere in the HTML:
 ```html
-<!-- Add this anywhere in the HTML body -->
-<script src="https://YOUR-PROJECT.vercel.app/widget.js"></script>
+<script src="https://detaildynamics.vercel.app/embed.js"></script>
+```
+The widget will automatically appear as a floating button in the bottom-right corner.
+
+#### Option 2: Direct iframe
+```html
+<iframe
+  src="https://detaildynamics.vercel.app/widget.html"
+  style="position:fixed; bottom:0; right:0; width:100%; height:100%; border:none; pointer-events:auto; z-index:999999;"
+  allow="microphone"
+  title="Rosie Chat Widget">
+</iframe>
 ```
 
-Or simply provide them the full Vercel URL to iframe or embed.
+#### Option 3: Full Page
+Send users directly to: `https://detaildynamics.vercel.app/`
+This shows the branded landing page with logo and background.
 
 ---
 
@@ -109,11 +123,14 @@ detaildynamics/
 ├── api/
 │   ├── vapi-chat.js       # Secure VAPI text chat endpoint
 │   └── retell-call.js     # Secure Retell voice call endpoint
-├── index.html             # Main chatbot widget (updated to use secure endpoints)
-├── simple-backend.html    # (deprecated - not needed anymore)
+├── index.html             # Full landing page with logo and background
+├── widget.html            # Widget-only version (no background/logo)
+├── embed.js               # One-line embed script for easy integration
 ├── .env.example           # Template for environment variables
-├── .gitignore            # Prevents committing secrets
-└── README.md             # This file
+├── .gitignore             # Prevents committing secrets
+├── package.json           # Project metadata
+├── vercel.json            # Vercel configuration
+└── README.md              # This file
 ```
 
 ---
