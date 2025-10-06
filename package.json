@@ -1,0 +1,21 @@
+{
+  "name": "detaildynamics-chatbot",
+  "version": "1.0.0",
+  "description": "Secure chatbot widget for Detail Dynamics powered by VAPI and Retell AI",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "keywords": [
+    "chatbot",
+    "vapi",
+    "retell",
+    "ai",
+    "voice",
+    "chat"
+  ],
+  "author": "Cold Lava",
+  "license": "UNLICENSED",
+  "private": true
+}

@@ -517,15 +517,13 @@
             let retellInitialized = false;
             let isConnecting = false;
 
-            // Configuration with your specific agent IDs
+            // Configuration - API endpoints (keys are now secure on the backend)
             const CONFIG = {
                 vapi: {
-                    apiKey: 'a025d33b-8e6a-45ee-bda4-ec22db21e1b6',
-                    assistantId: 'c86d0583-5a3a-4085-8976-28bff7f0e71b',
-                    apiUrl: 'https://api.vapi.ai/chat'
+                    apiUrl: '/api/vapi-chat'  // Secure backend endpoint
                 },
                 retell: {
-                    agentId: 'agent_6b974ba4769d7b7b8df27d05d0'
+                    apiUrl: '/api/retell-call'  // Secure backend endpoint
                 }
             };
 
@@ -689,12 +687,10 @@
                     const response = await fetch(CONFIG.vapi.apiUrl, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${CONFIG.vapi.apiKey}`
+                            'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            assistantId: CONFIG.vapi.assistantId,
-                            input: message,
+                            message: message,
                             previousChatId: previousVAPIChatId
                         })
                     });
@@ -773,16 +769,13 @@
                     elements.voiceButton.textContent = 'Connecting...';
                     elements.voiceStatus.textContent = 'Creating call...';
 
-                    // Direct call to Retell API (for demo - in production use backend)
-                    const RETELL_API_KEY = 'key_f636ae490564b5eeb88a55223ed9';
-                    const response = await fetch('https://api.retellai.com/v2/create-web-call', {
+                    // Secure call to backend endpoint
+                    const response = await fetch(CONFIG.retell.apiUrl, {
                         method: 'POST',
                         headers: {
-                            'Authorization': `Bearer ${RETELL_API_KEY}`,
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
-                            agent_id: CONFIG.retell.agentId,
                             metadata: {
                                 user_name: 'Cold Lava User',
                                 session_id: Date.now().toString()
