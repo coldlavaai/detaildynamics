@@ -20,10 +20,10 @@
     position: fixed;
     bottom: 0;
     right: 0;
-    width: 100%;
-    height: 100%;
+    width: 400px;
+    height: 600px;
     border: none;
-    pointer-events: none;
+    pointer-events: auto;
     z-index: 999999;
   `;
 
@@ -34,9 +34,6 @@
   // Add to page when DOM is ready
   function addWidget() {
     document.body.appendChild(iframe);
-
-    // Enable pointer events on the iframe
-    iframe.style.pointerEvents = 'auto';
   }
 
   if (document.readyState === 'loading') {
